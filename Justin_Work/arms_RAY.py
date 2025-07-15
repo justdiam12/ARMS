@@ -13,7 +13,7 @@ from Justin_Work.ray import Write_RAY, Read_RAY
 track_dir = "/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/"
 directory = "/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/arms_ray/"
 output_directory = "/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Output/"
-arms_save_file = "arms_1"
+arms_save_file = "arms_1_ray"
 
 # Trackline Information
 track_info = io.loadmat(os.path.join(track_dir, "track_info.mat"))
@@ -93,7 +93,7 @@ shot_1_ray = Write_RAY(dir=directory,
 shot_1_ray.write_files()
 
 # Run BELLHOP
-os.system("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/bellhopcuda/bin/bellhopcxx -2D /Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/arms_ray/arms_1")
+os.system("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/bellhopcuda/bin/bellhopcxx -2D /Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/arms_ray/arms_1_ray")
 
 shot_1_ray_plot = Read_RAY(directory=directory, 
                            output_directory = output_directory,
