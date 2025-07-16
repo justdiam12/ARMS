@@ -9,6 +9,7 @@ import struct
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # one level up
 sys.path.append(root_dir)
 from Justin_Work.tl import Write_TL, Read_TL
+from pyat.pyat.readwrite import *
 
 # Main Data Directory and Save File Name
 track_dir = "/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/"
@@ -33,7 +34,7 @@ ssp = np.append(ssp_, 1500.0)
 ssp_depths = np.append(ssp_depths_, 200.0)
 
 # Environmental Information (.env file info)
-freq = 50.0   # Hz
+freq = 10500.0   # Hz
 nmedia = 1   # Number of media layers (water column SSP)
 sspopt = "CVW"   # C = linear, V = Variable
 bottom_type = "A*"   # A = fluid, A~ = fluid with no .bot file
@@ -51,7 +52,7 @@ nrr = 501   # NR (number of receiver ranges)
 rr = [0.0, max(bath_ranges)]   # Receiver ranges (km)
 ray_compute = "C"   # Compute rays (E = eigenrays)
 num_beams = 0   # Number of beams
-launch_angles = [-20.0, 20.0]   # Beam launch angles
+launch_angles = [-89.0, 89.0]   # Beam launch angles
 step_size = 0.0   # Step size (meters)
 max_depth = bottom_depth+5   # Max depth (Meters)
 max_range = max(bath_ranges)+1  # Max range (Kilometers)
@@ -62,7 +63,7 @@ bottom_Z = bottom_ss * bottom_rho * 1000
 water_top_Z = ssp[0] * 1029
 water_bottom_Z = ssp[-1] * 1029
 
-shot_1_ray = Write_TL(dir=directory, 
+arms_1_tl = Write_TL(dir=directory, 
                       filename=arms_save_file, 
                       ssp_depths=ssp_depths,
                       ssp=ssp,
@@ -91,41 +92,16 @@ shot_1_ray = Write_TL(dir=directory,
                       max_depth=max_depth,
                       max_range=max_range)
 
-shot_1_ray.write_files()
+arms_1_tl.write_files()
 
 # Run BELLHOP
 os.system("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/bellhopcuda/bin/bellhopcxx -2D /Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/arms_tl/arms_1_tl")
 
-# shot_1_ray_plot = Read_TL(directory=directory, 
-#                           output_directory = output_directory,
-#                           ray_file=arms_save_file, 
-#                           ssp_depths=ssp_depths, 
-#                           ssp=ssp,
-#                           bath_ranges=bath_ranges, 
-#                           bath_depths=bath_depths,  
-#                           s_depth=sd[0], 
-#                           r_depth=rd[0], 
-#                           r_range=rr[0],
-#                           precision=precision,
-#                           surface_Z=surface_Z,
-#                           surface_c=surface_c,
-#                           bottom_Z=bottom_Z,
-#                           bottom_c=bottom_ss,
-#                           water_top_Z=water_top_Z,
-#                           water_bottom_Z=water_bottom_Z)
+arms_1_tl_plot = Read_TL(directory=directory, 
+                         output_directory = output_directory,
+                         tl_file=arms_save_file,
+                         freq=freq, 
+                         bath_ranges=bath_ranges)
 
-# shot_1_ray_plot.R_ray_profile()
-# plt.show()
-
-import arlpy.uwapm as pm
-
-# Specify the path to your .shd file
-shd_file_path = "path/to/your/bellhop_output.shd"
-
-# Read the .shd file
-shd_data = pm.read_shd(shd_file_path)
-
-# The shd_data object will contain the parsed information,
-# which can then be accessed for analysis or visualization.
-# For example, to access the transmission loss:
-transmission_loss = shd_data.tloss
+[_, _, _, _, _, pressure] = arms_1_tl_plot.read_shd()
+arms_1_tl_plot.plot_tl(pressure)

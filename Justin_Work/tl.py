@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import sys
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(root_dir)
+from pyat.pyat.readwrite import *
 
 class Write_TL:
     def __init__(self, 
@@ -150,153 +154,43 @@ class Read_TL:
     def __init__(self, 
                  directory, 
                  output_directory,
-                 ray_file, 
-                 ssp_depths, 
-                 ssp, 
-                 bath_ranges, 
-                 bath_depths, 
-                 s_depth, 
-                 r_depth, 
-                 r_range,
-                 precision,
-                 surface_Z,
-                 surface_c,
-                 bottom_Z,
-                 bottom_c,
-                 water_top_Z,
-                 water_bottom_Z):
+                 tl_file,
+                 freq,
+                 bath_ranges):
         
         self.dir = directory
         self.output_directory = output_directory
-        self.ray_file = ray_file
-        self.ssp_depths = ssp_depths
-        self.ssp = ssp
+        self.tl_file = tl_file
+        self.freq = freq
         self.bath_ranges = bath_ranges
-        self.bath_depths = bath_depths
-        self.ray_file_path = self.dir + self.ray_file + ".ray"
-        self.s_depth = s_depth
-        self.r_depth = r_depth
-        self.r_range = r_range
-        self.precision = precision
-        self.surface_Z = surface_Z
-        self.surface_c = surface_c
-        self.bottom_Z = bottom_Z
-        self.bottom_c = bottom_c
-        self.water_top_Z=water_top_Z,
-        self.water_bottom_Z=water_bottom_Z
-        self.alpha = []
-        self.R = []
-        self.bounce = []
-
-    def read_ray_file(self, filepath):
     
-        with open(filepath, 'r') as f:
-            lines = f.readlines()
 
-        # Basic metadata
-        title = lines[0].strip()
-        frequency = float(lines[1].strip())
-        nsrc, nrd, nr = map(int, lines[2].strip().split())
-        nbeams, ncoords = map(int, lines[3].strip().split())
-        src_depth = float(lines[4].strip())
-        r_end = float(lines[5].strip())
-        coord_type = lines[6].strip()  # should be 'rz'
+    def read_shd(self):
+        [x,x,x,x,ppos, pressure] = read_shd(self.dir + self.tl_file + ".shd", self.freq)
 
-        # Read ray points
-        line = 7
-        ray_data = []
-        alpha_data = []
-        while line <= len(lines)-1:
-            alpha_data.append(float(lines[line].strip()))
-            npts, ndim, _ = map(int, lines[line+1].strip().split())
-            line = line+2
-            start_line = line
-            ray = []
-            for l in lines[start_line:start_line+npts]:
-                r, z = map(float, l.strip().split())
-                ray.append((r, z))
-                line = line + 1
-            ray_data.append(ray) 
+        return [x,x,x,x,ppos, pressure]
 
-        return ray_data, alpha_data
+    
+    def plot_tl(self, pressure):
+        # Plot the pressure field
+        print(pressure.shape)
+        plt.figure(figsize=(12,8))
+        pressure = abs(pressure)
+        pressure = 10*np.log10(pressure/np.max(pressure))
+        levs = np.linspace(-30, 0, 31)
+        plt.contourf(np.squeeze(pressure), levels=levs)
+        plt.colorbar()
+        plt.gca().invert_yaxis()
+        plt.title(f"{self.tl_file}, Frequency: {self.freq/1000:.2}")
+        plt.xlabel("Range (km)")
+        plt.ylabel("Depth (m)")
+        n_range_pts = pressure.shape[3]
+        interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
 
+        # Set custom x-ticks (e.g., 6 evenly spaced points)
+        tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
+        tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
 
-    def plot_ray_profile(self):
-        rays, alphas = self.read_ray_file(self.ray_file_path)
-        fig, axs = plt.subplots(1, 2, figsize=(12, 6), sharey=True, gridspec_kw={'width_ratios': [3, 1]})
-        
-        for i in range(len(rays)):
-            ray = rays[i]
-            r = []
-            z = []
-            for j in range(len(ray)):
-                index = ray[j]
-                r.append(index[0] / 1000)
-                z.append(index[1])
-
-            if np.abs(z[-1] - self.r_depth) <= self.precision and np.abs(r[-1] - self.r_range) <= self.precision:
-                if alphas[i] < 0:
-                    up_down = -1
-                elif alphas[i] > 0:
-                    up_down = 1
-                
-                # Get the indices where the ray bounces off the surface or bottom
-                sign_change = np.diff(np.sign(np.diff(z)))
-                p_and_t = np.where(sign_change != 0)[0]
-                bounce_indices = p_and_t[np.where(np.diff(p_and_t) > 1)]
-                bounce_indices = np.append(bounce_indices, p_and_t[-1])
-
-                # Get the reflection coefficient
-                R_string = ""
-                R = 1
-                for b in range(len(bounce_indices)):
-                    R_string = self.R_type(R_string, up_down)
-                    if up_down == -1:
-                        dr = np.abs(r[bounce_indices[b]] - r[bounce_indices[b]-10])
-                        dz = np.abs(z[bounce_indices[b]] - z[bounce_indices[b]-10])
-                        angle = np.degrees(np.arctan(dz/dr))
-                        sin_angle = np.sin(np.radians(angle))
-                        surface_Z = np.array(self.surface_Z, dtype=float)
-                        water_top_Z = np.array(self.water_top_Z, dtype=float)
-                        R = (surface_Z * sin_angle - water_top_Z * sin_angle) / (surface_Z * sin_angle + water_top_Z * sin_angle) * R
-                        up_down = 1
-                    else:
-                        dr = np.abs(r[bounce_indices[b]] - r[bounce_indices[b]-10])
-                        dz = np.abs(z[bounce_indices[b]] - z[bounce_indices[b]-10])
-                        angle = np.degrees(np.arctan(dz/dr))
-                        sin_angle = np.sin(np.radians(angle))
-                        bottom_Z = np.array(self.bottom_Z, dtype=float)
-                        water_bottom_Z = np.array(self.water_bottom_Z, dtype=float)
-                        R = (bottom_Z * sin_angle - water_bottom_Z * sin_angle) / (bottom_Z * sin_angle + water_bottom_Z * sin_angle) * R
-                        up_down = -1
-                
-                if R_string not in self.bounce:
-                    self.bounce.append(R_string)
-                    self.alpha.append(alphas[i])
-                    self.R = np.append(self.R, R) 
-                    axs[0].plot(r,z, label=R_string)
-
-        sea_surface = np.zeros((len(self.bath_ranges)))
-        axs[0].invert_yaxis()
-        axs[0].plot(self.bath_ranges, sea_surface, "--", color="black", linewidth=3)
-        axs[0].plot(0, self.s_depth, "bo", linewidth=3)
-        axs[0].plot(self.r_range, self.r_depth, "ro", linewidth=3)
-        axs[0].plot(self.bath_ranges, self.bath_depths, color="black", linewidth=3)
-        axs[0].set_xlabel("Range (km)")
-        axs[0].set_ylabel("Depth (m)")
-        axs[0].set_title("Eigenrays")
-
-        axs[1].plot(self.ssp[0:int(max(self.bath_depths))], self.ssp_depths[0:int(max(self.bath_depths))])
-        axs[1].set_title("Sound Speed Profile")
-        axs[1].set_xlabel("Sound Speed (m/s)")
-        plt.savefig(self.output_directory + self.ray_file + ".png", dpi=300, bbox_inches='tight')
-        plt.tight_layout()
-                                
-            
-    def R_type(self, R_string, up_down):
-        if up_down == 1:
-            R_string += "B"
-        else:
-            R_string += "S"
-
-        return R_string
+        plt.xticks(ticks=tick_locs, labels=tick_labels)
+        plt.savefig(self.output_directory + self.tl_file + "_10500.png", dpi=300)
+        plt.show()
