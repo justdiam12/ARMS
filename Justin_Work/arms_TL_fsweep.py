@@ -46,9 +46,9 @@ bottom_rho = 1.8   # Grams per Centimeter^3
 bottom_shear = 0.0   # Meters per Second
 nsd = 1   # NSD (Number of source depths)
 sd = [20.0]   # Source depth(s) (Meters)
-nrd = 201   # NRD (number of receiver depths)
+nrd = 501   # NRD (number of receiver depths)
 rd = [0.0, 200.0]   # Receiver depths (Meters)
-nrr = 501   # NR (number of receiver ranges)
+nrr = 1001   # NR (number of receiver ranges)
 rr = [0.0, max(bath_ranges)]   # Receiver ranges (km)
 ray_compute = "C"   # Compute rays (E = eigenrays)
 num_beams = 0   # Number of beams

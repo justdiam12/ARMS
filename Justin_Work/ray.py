@@ -4,34 +4,34 @@ import os
 
 class Write_RAY:
     def __init__(self, 
-                 dir,                   # Save File Directory
-                 filename,              # Save Filename with no extension
-                 ssp_depths,            # Numpy array of Sound Speed Profile Depths (Meters)
-                 ssp,                   # Numpy array of Sound Speed Profile (same length as ssp_depths), (Meters/second)
-                 bath_ranges,           # Numpy array of bathymetry range values (Kilometers)
-                 bath_depths,           # Numpy array of bathymetry depths (same length as bath_ranges), (Meters)
-                 freq,
-                 nmedia,
-                 sspopt,
-                 bottom_type,
-                 roughness,
-                 bottom_depth,
-                 bottom_ss,
-                 bottom_alpha,
-                 bottom_rho,
-                 bottom_shear,
-                 nsd,
-                 sd,
-                 nrd,
-                 rd,
-                 nrr, 
-                 rr,
-                 ray_compute,
-                 num_beams,
-                 launch_angles,
-                 step_size,
-                 max_depth,
-                 max_range,
+                 dir=None,                   # Save File Directory
+                 filename=None,              # Save Filename with no extension
+                 ssp_depths=None,            # Numpy array of Sound Speed Profile Depths (Meters)
+                 ssp=None,                   # Numpy array of Sound Speed Profile (same length as ssp_depths), (Meters/second)
+                 bath_ranges=None,           # Numpy array of bathymetry range values (Kilometers)
+                 bath_depths=None,           # Numpy array of bathymetry depths (same length as bath_ranges), (Meters)
+                 freq=None,
+                 nmedia=None,
+                 sspopt=None,
+                 bottom_type=None,
+                 roughness=None,
+                 bottom_depth=None,
+                 bottom_ss=None,
+                 bottom_alpha=None,
+                 bottom_rho=None,
+                 bottom_shear=None,
+                 nsd=None,
+                 sd=None,
+                 nrd=None,
+                 rd=None,
+                 nrr=None, 
+                 rr=None,
+                 ray_compute=None,
+                 num_beams=None,
+                 launch_angles=None,
+                 step_size=None,
+                 max_depth=None,
+                 max_range=None,
                  pair='L'):             # Default for 2D Ray ('L' = List of pairs)
         
         self.dir = dir
@@ -148,23 +148,23 @@ class Write_RAY:
 
 class Read_RAY:
     def __init__(self, 
-                 directory, 
-                 output_directory,
-                 ray_file, 
-                 ssp_depths, 
-                 ssp, 
-                 bath_ranges, 
-                 bath_depths, 
-                 s_depth, 
-                 r_depth, 
-                 r_range,
-                 precision,
-                 surface_Z,
-                 surface_c,
-                 bottom_Z,
-                 bottom_c,
-                 water_top_Z,
-                 water_bottom_Z):
+                 directory=None, 
+                 output_directory=None,
+                 ray_file=None, 
+                 ssp_depths=None, 
+                 ssp=None, 
+                 bath_ranges=None, 
+                 bath_depths=None, 
+                 s_depth=None, 
+                 r_depth=None, 
+                 r_range=None,
+                 precision=None,
+                 surface_Z=None,
+                 surface_c=None,
+                 bottom_Z=None,
+                 bottom_c=None,
+                 water_top_Z=None,
+                 water_bottom_Z=None):
         
         self.dir = directory
         self.output_directory = output_directory

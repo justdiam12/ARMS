@@ -100,7 +100,7 @@ os.system("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/bellhop
 arms_1_tl_plot = Read_TL(directory=directory, 
                          output_directory = output_directory,
                          tl_file=arms_save_file,
-                         freq=freq, 
+                         freqs=[freq], 
                          bath_ranges=bath_ranges)
 
 [_, _, _, _, _, pressure] = arms_1_tl_plot.read_shd()

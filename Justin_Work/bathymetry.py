@@ -57,7 +57,7 @@ def plot_2D_bathy(bath_map, lon_range, lat_range, save_dir=None):
 
 
 # This function extracts a 1D bathymetry profile from a 2D bathymetry map (returns 1D profile as np.array)
-def map_1D(bath_map, lon_range, lat_range, lon_start, lon_end, lat_start, lat_end, num_points=200):
+def map_1D(bath_map, lon_range, lat_range, lon_start, lon_end, lat_start, lat_end, num_points=1000):
     interp = RegularGridInterpolator((lat_range, lon_range), bath_map, bounds_error=False, fill_value=np.nan)
 
     # Generate evenly spaced points along the trackline
