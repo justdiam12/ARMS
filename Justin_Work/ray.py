@@ -10,6 +10,7 @@ class Write_RAY:
                  ssp=None,                   # Numpy array of Sound Speed Profile (same length as ssp_depths), (Meters/second)
                  bath_ranges=None,           # Numpy array of bathymetry range values (Kilometers)
                  bath_depths=None,           # Numpy array of bathymetry depths (same length as bath_ranges), (Meters)
+                 ati_depths=None,
                  freq=None,
                  nmedia=None,
                  sspopt=None,
@@ -40,6 +41,7 @@ class Write_RAY:
         self.ssp = ssp
         self.bath_ranges = bath_ranges
         self.bath_depths = bath_depths
+        self.ati_depths = ati_depths
         self.freq = freq
         self.nmedia = nmedia
         self.sspopt = sspopt
@@ -140,10 +142,23 @@ class Write_RAY:
                 f.write(f"{r:.2f}  {d:.1f} / \n")
         print(f".bty file written: {bty_path}")
 
+    def write_ati(self):
+        ati_path = os.path.join(self.dir, self.filename + ".ati")
+        if len(self.bath_ranges) != len(self.ati_depths):
+            raise ValueError("ranges_km and depths_m must be the same length.")
+    
+        with open(ati_path, 'w') as f:
+            f.write(f"'{self.pair}'\n")
+            f.write(f"{len(self.bath_ranges)},\n")
+            for r, d in zip(self.bath_ranges, self.ati_depths):
+                f.write(f"{r:.2f}  {d:.1f} / \n")
+        print(f".ati file written: {ati_path}")
+
     def write_files(self):
         self.write_ssp()
         self.write_bty()
-        self.write_env()
+        self.write_ati()
+        # self.write_env()
 
 
 class Read_RAY:
@@ -155,6 +170,7 @@ class Read_RAY:
                  ssp=None, 
                  bath_ranges=None, 
                  bath_depths=None, 
+                 ati_depths=None,
                  s_depth=None, 
                  r_depth=None, 
                  r_range=None,
@@ -173,6 +189,7 @@ class Read_RAY:
         self.ssp = ssp
         self.bath_ranges = bath_ranges
         self.bath_depths = bath_depths
+        self.ati_depths = ati_depths
         self.ray_file_path = self.dir + self.ray_file + ".ray"
         self.s_depth = s_depth
         self.r_depth = r_depth
@@ -276,9 +293,10 @@ class Read_RAY:
                     self.R = np.append(self.R, R) 
                     axs[0].plot(r,z, label=R_string)
 
-        sea_surface = np.zeros((len(self.bath_ranges)))
+        # sea_surface = np.zeros((len(self.bath_ranges)))
         axs[0].invert_yaxis()
-        axs[0].plot(self.bath_ranges, sea_surface, "--", color="black", linewidth=3)
+        # axs[0].plot(self.bath_ranges, sea_surface, "--", color="black", linewidth=3)
+        axs[0].plot(self.bath_ranges, self.ati_depths, "--", color="black", linewidth=3)
         axs[0].plot(0, self.s_depth, "bo", linewidth=3)
         axs[0].plot(self.r_range, self.r_depth, "ro", linewidth=3)
         axs[0].plot(self.bath_ranges, self.bath_depths, color="black", linewidth=3)

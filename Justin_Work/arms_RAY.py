@@ -21,6 +21,7 @@ track_info = io.loadmat(os.path.join(track_dir, "track_info.mat"))
 # Bathymetry (.bty file info)
 bath_ranges = np.squeeze(np.array(track_info["distances"]), axis=0) # Meters
 bath_depths = np.squeeze(np.array(track_info["profile"]), axis=0)
+ati_depths = np.ones_like(bath_ranges) * 10 * np.sin(2*np.pi*bath_ranges)
 
 # Sound Speed Profile (.ssp file info)
 ssp_data = io.loadmat(os.path.join(track_dir, "ARMS_firstDay_CTD_info.mat"))
@@ -35,7 +36,7 @@ ssp_depths = np.append(ssp_depths_, 200.0)
 freq = 50.0   # Hz
 nmedia = 1   # Number of media layers (water column SSP)
 sspopt = "SVW"   # C = linear, V = Variable
-bottom_type = "A*"   # A = fluid, A~ = fluid with no .bot file
+bottom_type = "A*"   # A = fluid
 roughness = 0.0   # Roughness
 bottom_depth = max(bath_depths)   # Bottom Depth (m)
 bottom_ss = 1600.0   # Meters per Second
@@ -67,6 +68,7 @@ shot_1_ray = Write_RAY(dir=directory,
                        ssp=ssp,
                        bath_ranges=bath_ranges,
                        bath_depths=bath_depths,
+                       ati_depths=ati_depths,
                        freq=freq,
                        nmedia=nmedia,
                        sspopt=sspopt,
@@ -101,7 +103,8 @@ shot_1_ray_plot = Read_RAY(directory=directory,
                            ssp_depths=ssp_depths, 
                            ssp=ssp,
                            bath_ranges=bath_ranges, 
-                           bath_depths=bath_depths,  
+                           bath_depths=bath_depths, 
+                           ati_depths=ati_depths, 
                            s_depth=sd[0], 
                            r_depth=rd[0], 
                            r_range=rr[0],
