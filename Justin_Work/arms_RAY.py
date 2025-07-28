@@ -29,24 +29,28 @@ ssp_ = np.squeeze(np.array(ssp_data["Sound_velocity"]), axis=1) # Meters per sec
 ssp_depths_ = np.squeeze(np.array(ssp_data["Depth"]), axis=1) # Meters per second
 
 # Fix SSP and Depths for Max Bathymetry Depth
-ssp = np.append(ssp_, 1500.0)
-ssp_depths = np.append(ssp_depths_, 200.0)
+ssp_extra = np.linspace(max(ssp_)+1, max(ssp_)+2, 100)
+ssp_depths_extra = np.linspace(max(ssp_depths_)+1, max(bath_depths)+5, 100)
+ssp = np.append(ssp_, ssp_extra)
+ssp_depths = np.append(ssp_depths_, ssp_depths_extra)
+ssp = np.append(1470, ssp)
+ssp_depths = np.append(-10, ssp_depths)
 
 # Environmental Information (.env file info)
-freq = 50.0   # Hz
+freq = 100.0   # Hz
 nmedia = 1   # Number of media layers (water column SSP)
-sspopt = ["",  # S: Cubic Spline Interpolation, C: C-linear interpolation, N: N2-line Interpolation, A: Analytic Interpolation, Q: Quadratic Approximation
-          "",  # V: Vacuum above surface (SURFACE-LINE not required), R: Perfectly rigid media above surface, A: Acoustic half-space, F: Read a list of reflection coefficients from *.irc file
-          "",  # F: attenuation corresponds to (dB/m)kHz, L: attenuation corresponds to parameter loss, M: attenuation corresponds to dB/m, N: attenuation corresponds to Nepers/m, Q: attenuation corresponds to a Q-factor, W: attenuation corresponds to dB/wavelength
-          "",  # T: Opptional parameter for Thorpe volume attenuation
-          ""]  # *: Use if including an *.ati file for surface shape
-surface_opt = [max(min(ati_depths)),  # Bottom depth (m)
-               350.0,                 # Compressional Speed (m/s)
-               0.0,                   # Shear Speed (m/s)
-               1.8,                   # Density (g/cm^3)
-               0.0]                   # Surface Attenuation (units specified by sspopt(3))
-bottom_type = ["",  # V: Vacuum below water column, R: rigid below water column, A: acoustic half-space below water column (need BOTTOM-LINE), F: read list of reflection coefficients from *.brc file
-               ""]  # *: include if wanting to use a *.bty file
+sspopt = ["S",  # S: Cubic Spline Interpolation, C: C-linear interpolation, N: N2-line Interpolation, A: Analytic Interpolation, Q: Quadratic Approximation
+          "A",  # V: Vacuum above surface (SURFACE-LINE not required), R: Perfectly rigid media above surface, A: Acoustic half-space, F: Read a list of reflection coefficients from *.irc file
+          "F",  # F: attenuation corresponds to (dB/m)kHz, L: attenuation corresponds to parameter loss, M: attenuation corresponds to dB/m, N: attenuation corresponds to Nepers/m, Q: attenuation corresponds to a Q-factor, W: attenuation corresponds to dB/wavelength
+          " ",  # T: Opptional parameter for Thorpe volume attenuation
+          "*"]  # *: Use if including an *.ati file for surface shape
+surface_opt = [min(ati_depths),  # Bottom depth (m)
+               350.0,            # Compressional Speed (m/s)
+               0.0,              # Shear Speed (m/s)
+               1.8,              # Density (g/cm^3)
+               0.0]              # Surface Attenuation (units specified by sspopt(3))
+bottom_type = ["A",  # V: Vacuum below water column, R: rigid below water column, A: acoustic half-space below water column (need BOTTOM-LINE), F: read list of reflection coefficients from *.brc file
+               "*"]  # *: include if wanting to use a *.bty file
 roughness = 0.0   # Roughness
 bottom_opt = [max(bath_depths),  # Bottom depth (m)
               1600.0,            # Compressional Speed (m/s)
@@ -54,12 +58,12 @@ bottom_opt = [max(bath_depths),  # Bottom depth (m)
               1.8,               # Density (g/cm^3)
               0.0]               # Bottom Attenuation (units specified by sspopt(3))
 nsd = 1   # NSD (Number of source depths)
-sd = [20.0]   # Source depth(s) (Meters)
+sd = [60.0]   # Source depth(s) (Meters)
 nrd = 1   # NRD (number of receiver depths)
 rd = [60.0]   # Receiver depths (Meters)
 nrr = 1   # NR (number of receiver ranges)
 rr = [max(bath_ranges)]   # Receiver ranges (km)
-ray_compute = ["",  # A: Write amplitude and travel times, E: Write Eigenray coordinates, R: Write ray coordinates, C: Write coherent acoustic pressure, I: Write incoherent acoustic pressure, S: Write semi-coherent acoustic pressure
+ray_compute = ["E",  # A: Write amplitude and travel times, E: Write Eigenray coordinates, R: Write ray coordinates, C: Write coherent acoustic pressure, I: Write incoherent acoustic pressure, S: Write semi-coherent acoustic pressure
                "",  # G: Use geometric beams (default), C: Use cartesian beams, R: Use ray-centered beams, B: Use Gaussian beam bundles
                "",  # ' ': Do not use beam shift effects (defualt), S: Include beam shift effects, *: Use source beam pattern file
                "",  # R: Point source in cylindrical coordinates (default), X: line source in Cartesian coordinates
@@ -67,13 +71,13 @@ ray_compute = ["",  # A: Write amplitude and travel times, E: Write Eigenray coo
 num_beams = 10001   # Number of beams
 launch_angles = [-25.0, 25.0]   # Beam launch angles
 step_size = 10.0   # Step size (meters)
-max_depth = bottom_depth+5   # Max depth (Meters)
+max_depth = bottom_opt[0]+5   # Max depth (Meters)
 max_range = max(bath_ranges)+1  # Max range (Kilometers)
 
 # Only needed if opt3 is composed of more than one character
 opt4 = ["",  # C: Cerveny Type, F: Space-filling, M: Minimum width, W: WKB beams
         ""]  # D: Use curvature doubling, S: Use standard curvature, Z: Use zeroing curvature
-
+pair = 'L'  # L: linear interpolation, C: Curvilinear interpolation
 precision = 1
 
 shot_1_ray = Write_RAY(dir=directory, 
@@ -89,7 +93,7 @@ shot_1_ray = Write_RAY(dir=directory,
                        surface_opt=surface_opt,
                        bottom_type=bottom_type,
                        roughness=roughness,
-                       bottom_opt=bottom_opt
+                       bottom_opt=bottom_opt,
                        nsd=nsd,
                        sd=sd,
                        nrd=nrd,
@@ -102,7 +106,8 @@ shot_1_ray = Write_RAY(dir=directory,
                        step_size=step_size,
                        max_depth=max_depth,
                        max_range=max_range,
-                       opt4=opt4)
+                       opt4=opt4,
+                       pair=pair)
 
 shot_1_ray.write_files()
 

@@ -14,13 +14,10 @@ class Write_RAY:
                  freq=None,
                  nmedia=None,
                  sspopt=None,
+                 surface_opt=None,
                  bottom_type=None,
                  roughness=None,
-                 bottom_depth=None,
-                 bottom_ss=None,
-                 bottom_alpha=None,
-                 bottom_rho=None,
-                 bottom_shear=None,
+                 bottom_opt=None,
                  nsd=None,
                  sd=None,
                  nrd=None,
@@ -33,6 +30,7 @@ class Write_RAY:
                  step_size=None,
                  max_depth=None,
                  max_range=None,
+                 opt4=None,
                  pair='L'):             # Default for 2D Ray ('L' = List of pairs)
         
         self.dir = dir
@@ -45,13 +43,10 @@ class Write_RAY:
         self.freq = freq
         self.nmedia = nmedia
         self.sspopt = sspopt
+        self.surface_opt = surface_opt
         self.bottom_type = bottom_type
         self.roughness = roughness
-        self.bottom_depth = bottom_depth
-        self.bottom_ss = bottom_ss
-        self.bottom_alpha = bottom_alpha
-        self.bottom_rho = bottom_rho
-        self.bottom_shear = bottom_shear
+        self.bottom_opt = bottom_opt
         self.nsd=nsd
         self.sd=sd
         self.nrd=nrd
@@ -64,7 +59,8 @@ class Write_RAY:
         self.step_size=step_size
         self.max_depth=max_depth
         self.max_range=max_range
-        self.pair = pair
+        self.opt4=opt4
+        self.pair=pair
 
 
     def write_env(self):
@@ -81,12 +77,14 @@ class Write_RAY:
             f.write(f"{self.freq}\t\t\t! FREQ (Hz)\n")
             f.write(f"{self.nmedia}\t\t\t! NMEDIA\n")
             f.write(f"'{self.sspopt[0]}{self.sspopt[1]}{self.sspopt[2]}{self.sspopt[3]}{self.sspopt[4]}'\t\t\t! SSPOPT\n")
+            if self.sspopt[1] == "A":
+                f.write(f"{self.surface_opt[0]:.1f}  {self.surface_opt[1]:.2f}  {self.surface_opt[2]:.1f}  {self.surface_opt[3]:.1f}  {self.surface_opt[4]:.1f} /\t\t\t! Surface depth, compressional speed, shear speed, density, and attenuation\n")
             f.write(f"{len(self.ssp_depth)}  {min(self.ssp_depth):.1f}  {max(self.ssp_depth):.1f}\t\t\t! DEPTH of bottom (m)\n")
             for d, s in zip(self.ssp_depth, self.ssp):
                 f.write(f"{d:.1f}  {s:.2f}  /\n")
             f.write("\n")
-            f.write(f"'{self.bottom_type}' {self.roughness}\t\t\t! BOTTOM TYPE ('A' = fluid), roughness\n")
-            f.write(f"{self.bottom_depth:.1f}  {self.bottom_ss:.2f}  {self.bottom_shear:.1f}  {self.bottom_rho:.1f}  {self.bottom_alpha:.1f} /\t\t\t! Bottom depth, sound speed, shear speed, density\n")
+            f.write(f"'{self.bottom_type[0]}{self.bottom_type[1]}' {self.roughness}\t\t\t! BOTTOM TYPE, roughness\n")
+            f.write(f"{self.bottom_opt[0]:.1f}  {self.bottom_opt[1]:.2f}  {self.bottom_opt[2]:.1f}  {self.bottom_opt[3]:.1f}  {self.bottom_opt[4]:.1f} /\t\t\t! Bottom depth, compressional speed, shear speed, density, and attenuation\n")
             f.write("\n")
             f.write(f"{self.nsd}\t\t\t! NSD: Number of source depths\n")
             for i in range(len(self.sd)):
@@ -109,7 +107,7 @@ class Write_RAY:
                 else:
                     f.write(f"{self.rr[i]:.1f} ")
             f.write("\n")
-            f.write(f"'{self.ray_compute}'\t\t\t! Option: 'R' for ray tracing, 'C' = coherent TL, 'I' = incoherent TL, 'S' = arrivals\n")
+            f.write(f"'{self.ray_compute[0]}{self.ray_compute[1]}{self.ray_compute[2]}{self.ray_compute[3]}{self.ray_compute[4]}'\t\t\t! Option: 'R' for ray tracing, 'C' = coherent TL, 'I' = incoherent TL, 'S' = arrivals\n")
             f.write(f"{self.num_beams} \t\t\t! Number of beams\n")
             f.write(f"{self.launch_angles[0]} {self.launch_angles[1]} /\t\t\t! Launch angles (degrees)\n")
             f.write("\n")
@@ -179,12 +177,8 @@ class Read_RAY:
                  r_depth=None, 
                  r_range=None,
                  precision=None,
-                 surface_Z=None,
-                 surface_c=None,
-                 bottom_Z=None,
-                 bottom_c=None,
-                 water_top_Z=None,
-                 water_bottom_Z=None):
+                 bottom_opt=None,
+                 surface_opt=None):
         
         self.dir = directory
         self.output_directory = output_directory
@@ -199,15 +193,8 @@ class Read_RAY:
         self.r_depth = r_depth
         self.r_range = r_range
         self.precision = precision
-        self.surface_Z = surface_Z
-        self.surface_c = surface_c
-        self.bottom_Z = bottom_Z
-        self.bottom_c = bottom_c
-        self.water_top_Z=water_top_Z,
-        self.water_bottom_Z=water_bottom_Z
-        self.alpha = []
-        self.R = []
-        self.bounce = []
+        self.bottom_opt = bottom_opt
+        self.surface_opt = surface_opt
 
     def read_ray_file(self, filepath):
     
@@ -255,47 +242,50 @@ class Read_RAY:
                 r.append(index[0] / 1000)
                 z.append(index[1])
 
-            if np.abs(z[-1] - self.r_depth) <= self.precision and np.abs(r[-1] - self.r_range) <= self.precision:
-                if alphas[i] < 0:
-                    up_down = -1
-                elif alphas[i] > 0:
-                    up_down = 1
-                
-                # Get the indices where the ray bounces off the surface or bottom
-                sign_change = np.diff(np.sign(np.diff(z)))
-                p_and_t = np.where(sign_change != 0)[0]
-                bounce_indices = p_and_t[np.where(np.diff(p_and_t) > 1)]
-                bounce_indices = np.append(bounce_indices, p_and_t[-1])
+            # Plot ray
+            axs[0].plot(r,z)
 
-                # Get the reflection coefficient
-                R_string = ""
-                R = 1
-                for b in range(len(bounce_indices)):
-                    R_string = self.R_type(R_string, up_down)
-                    if up_down == -1:
-                        dr = np.abs(r[bounce_indices[b]] - r[bounce_indices[b]-10])
-                        dz = np.abs(z[bounce_indices[b]] - z[bounce_indices[b]-10])
-                        angle = np.degrees(np.arctan(dz/dr))
-                        sin_angle = np.sin(np.radians(angle))
-                        surface_Z = np.array(self.surface_Z, dtype=float)
-                        water_top_Z = np.array(self.water_top_Z, dtype=float)
-                        R = (surface_Z * sin_angle - water_top_Z * sin_angle) / (surface_Z * sin_angle + water_top_Z * sin_angle) * R
-                        up_down = 1
-                    else:
-                        dr = np.abs(r[bounce_indices[b]] - r[bounce_indices[b]-10])
-                        dz = np.abs(z[bounce_indices[b]] - z[bounce_indices[b]-10])
-                        angle = np.degrees(np.arctan(dz/dr))
-                        sin_angle = np.sin(np.radians(angle))
-                        bottom_Z = np.array(self.bottom_Z, dtype=float)
-                        water_bottom_Z = np.array(self.water_bottom_Z, dtype=float)
-                        R = (bottom_Z * sin_angle - water_bottom_Z * sin_angle) / (bottom_Z * sin_angle + water_bottom_Z * sin_angle) * R
-                        up_down = -1
+            # if np.abs(z[-1] - self.r_depth) <= self.precision and np.abs(r[-1] - self.r_range) <= self.precision:
+            #     if alphas[i] < 0:
+            #         up_down = -1
+            #     elif alphas[i] > 0:
+            #         up_down = 1
                 
-                if R_string not in self.bounce:
-                    self.bounce.append(R_string)
-                    self.alpha.append(alphas[i])
-                    self.R = np.append(self.R, R) 
-                    axs[0].plot(r,z, label=R_string)
+            #     # Get the indices where the ray bounces off the surface or bottom
+            #     sign_change = np.diff(np.sign(np.diff(z)))
+            #     p_and_t = np.where(sign_change != 0)[0]
+            #     bounce_indices = p_and_t[np.where(np.diff(p_and_t) > 1)]
+            #     bounce_indices = np.append(bounce_indices, p_and_t[-1])
+
+                # # Get the reflection coefficient
+                # R_string = ""
+                # R = 1
+                # for b in range(len(bounce_indices)):
+                #     R_string = self.R_type(R_string, up_down)
+                #     if up_down == -1:
+                #         dr = np.abs(r[bounce_indices[b]] - r[bounce_indices[b]-10])
+                #         dz = np.abs(z[bounce_indices[b]] - z[bounce_indices[b]-10])
+                #         angle = np.degrees(np.arctan(dz/dr))
+                #         sin_angle = np.sin(np.radians(angle))
+                #         surface_Z = np.array(self.surface_Z, dtype=float)
+                #         water_top_Z = np.array(self.water_top_Z, dtype=float)
+                #         R = (surface_Z * sin_angle - water_top_Z * sin_angle) / (surface_Z * sin_angle + water_top_Z * sin_angle) * R
+                #         up_down = 1
+                #     else:
+                #         dr = np.abs(r[bounce_indices[b]] - r[bounce_indices[b]-10])
+                #         dz = np.abs(z[bounce_indices[b]] - z[bounce_indices[b]-10])
+                #         angle = np.degrees(np.arctan(dz/dr))
+                #         sin_angle = np.sin(np.radians(angle))
+                #         bottom_Z = np.array(self.bottom_Z, dtype=float)
+                #         water_bottom_Z = np.array(self.water_bottom_Z, dtype=float)
+                #         R = (bottom_Z * sin_angle - water_bottom_Z * sin_angle) / (bottom_Z * sin_angle + water_bottom_Z * sin_angle) * R
+                #         up_down = -1
+                
+                # if R_string not in self.bounce:
+                #     self.bounce.append(R_string)
+                #     self.alpha.append(alphas[i])
+                #     self.R = np.append(self.R, R) 
+                #     axs[0].plot(r,z, label=R_string)
 
         # sea_surface = np.zeros((len(self.bath_ranges)))
         axs[0].invert_yaxis()
@@ -308,7 +298,7 @@ class Read_RAY:
         axs[0].set_ylabel("Depth (m)")
         axs[0].set_title("Eigenrays")
 
-        axs[1].plot(self.ssp[0:int(max(self.bath_depths))], self.ssp_depths[0:int(max(self.bath_depths))])
+        axs[1].plot(self.ssp, self.ssp_depths)
         axs[1].set_title("Sound Speed Profile")
         axs[1].set_xlabel("Sound Speed (m/s)")
         plt.savefig(self.output_directory + self.ray_file + ".png", dpi=300, bbox_inches='tight')
