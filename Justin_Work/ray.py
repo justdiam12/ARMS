@@ -80,7 +80,7 @@ class Write_RAY:
             f.write(f"'{self.filename}'\t\t\t! TITLE\n")
             f.write(f"{self.freq}\t\t\t! FREQ (Hz)\n")
             f.write(f"{self.nmedia}\t\t\t! NMEDIA\n")
-            f.write(f"'{self.sspopt}'\t\t\t! SSPOPT\n")
+            f.write(f"'{self.sspopt[0]}{self.sspopt[1]}{self.sspopt[2]}{self.sspopt[3]}{self.sspopt[4]}'\t\t\t! SSPOPT\n")
             f.write(f"{len(self.ssp_depth)}  {min(self.ssp_depth):.1f}  {max(self.ssp_depth):.1f}\t\t\t! DEPTH of bottom (m)\n")
             for d, s in zip(self.ssp_depth, self.ssp):
                 f.write(f"{d:.1f}  {s:.2f}  /\n")
@@ -130,6 +130,7 @@ class Write_RAY:
                 f.write(f"{d:.2f}  {s:.2f}\n")
         print(f".ssp file written: {ssp_path}")
 
+
     def write_bty(self):
         bty_path = os.path.join(self.dir, self.filename + ".bty")
         if len(self.bath_ranges) != len(self.bath_depths):
@@ -141,6 +142,7 @@ class Write_RAY:
             for r, d in zip(self.bath_ranges, self.bath_depths):
                 f.write(f"{r:.2f}  {d:.1f} / \n")
         print(f".bty file written: {bty_path}")
+
 
     def write_ati(self):
         ati_path = os.path.join(self.dir, self.filename + ".ati")
@@ -154,11 +156,13 @@ class Write_RAY:
                 f.write(f"{r:.2f}  {d:.1f} / \n")
         print(f".ati file written: {ati_path}")
 
+
     def write_files(self):
-        self.write_ssp()
-        self.write_bty()
-        self.write_ati()
-        # self.write_env()
+        self.write_env()
+        if self.bottom_type[1] == "*":
+            self.write_bty()
+        if self.sspopt[4] == "*":
+            self.write_ati()
 
 
 class Read_RAY:

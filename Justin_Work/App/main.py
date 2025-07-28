@@ -160,8 +160,7 @@ class TLViewerApp(QWidget):
             run_tl.write_files()
 
             os.system(
-                "/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/bellhopcuda/bin/bellhopcxx -2D /Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/App/runs/run_"
-                + str(int(freq))
+                "/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/bellhopcuda/bin/bellhopcxx -2D /Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/App/runs/run_" + str(int(freq))
             )
 
             run_tl_plot = Read_TL(

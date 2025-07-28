@@ -241,3 +241,25 @@ class Read_TL:
         output_path = f"{self.output_directory}{self.tl_file}_sweep.mp4"
         anim.save(output_path, writer='ffmpeg', fps=5)
         print(f"Saved animation to {output_path}")
+
+    def plot_tl(self, pressure):
+        pressure = abs(pressure)
+        pressure = 10 * np.log10(pressure / np.max(pressure))
+        levs = np.linspace(-30, 0, 31)
+
+        plt.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
+        plt.invert_yaxis()
+
+        plt.title(f"{self.tl_file}, Frequency: {self.freqs[0]/1000:.1f} kHz")
+        plt.xlabel("Range (km)")
+        plt.ylabel("Depth (m)")
+
+        # Tick labeling
+        n_range_pts = pressure.shape[-1]
+        interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
+        tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
+        tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
+        plt.set_xticks(tick_locs)
+        plt.set_xticklabels(tick_labels)
+        plt.savefig(self.output_directory + self.tl_file + ".png", dpi=300)
+        

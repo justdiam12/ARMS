@@ -35,32 +35,46 @@ ssp_depths = np.append(ssp_depths_, 200.0)
 # Environmental Information (.env file info)
 freq = 50.0   # Hz
 nmedia = 1   # Number of media layers (water column SSP)
-sspopt = "SVW"   # C = linear, V = Variable
-bottom_type = "A*"   # A = fluid
+sspopt = ["",  # S: Cubic Spline Interpolation, C: C-linear interpolation, N: N2-line Interpolation, A: Analytic Interpolation, Q: Quadratic Approximation
+          "",  # V: Vacuum above surface (SURFACE-LINE not required), R: Perfectly rigid media above surface, A: Acoustic half-space, F: Read a list of reflection coefficients from *.irc file
+          "",  # F: attenuation corresponds to (dB/m)kHz, L: attenuation corresponds to parameter loss, M: attenuation corresponds to dB/m, N: attenuation corresponds to Nepers/m, Q: attenuation corresponds to a Q-factor, W: attenuation corresponds to dB/wavelength
+          "",  # T: Opptional parameter for Thorpe volume attenuation
+          ""]  # *: Use if including an *.ati file for surface shape
+surface_opt = [max(min(ati_depths)),  # Bottom depth (m)
+               350.0,                 # Compressional Speed (m/s)
+               0.0,                   # Shear Speed (m/s)
+               1.8,                   # Density (g/cm^3)
+               0.0]                   # Surface Attenuation (units specified by sspopt(3))
+bottom_type = ["",  # V: Vacuum below water column, R: rigid below water column, A: acoustic half-space below water column (need BOTTOM-LINE), F: read list of reflection coefficients from *.brc file
+               ""]  # *: include if wanting to use a *.bty file
 roughness = 0.0   # Roughness
-bottom_depth = max(bath_depths)   # Bottom Depth (m)
-bottom_ss = 1600.0   # Meters per Second
-bottom_alpha = 0.0   # dB per wavelength
-bottom_rho = 1.8   # Grams per Centimeter^3
-bottom_shear = 0.0   # Meters per Second
+bottom_opt = [max(bath_depths),  # Bottom depth (m)
+              1600.0,            # Compressional Speed (m/s)
+              0.0,               # Shear Speed (m/s)
+              1.8,               # Density (g/cm^3)
+              0.0]               # Bottom Attenuation (units specified by sspopt(3))
 nsd = 1   # NSD (Number of source depths)
 sd = [20.0]   # Source depth(s) (Meters)
 nrd = 1   # NRD (number of receiver depths)
 rd = [60.0]   # Receiver depths (Meters)
 nrr = 1   # NR (number of receiver ranges)
 rr = [max(bath_ranges)]   # Receiver ranges (km)
-ray_compute = "E"   # Compute rays (E = eigenrays)
+ray_compute = ["",  # A: Write amplitude and travel times, E: Write Eigenray coordinates, R: Write ray coordinates, C: Write coherent acoustic pressure, I: Write incoherent acoustic pressure, S: Write semi-coherent acoustic pressure
+               "",  # G: Use geometric beams (default), C: Use cartesian beams, R: Use ray-centered beams, B: Use Gaussian beam bundles
+               "",  # ' ': Do not use beam shift effects (defualt), S: Include beam shift effects, *: Use source beam pattern file
+               "",  # R: Point source in cylindrical coordinates (default), X: line source in Cartesian coordinates
+               ""]  # R: Rectiliniear receiver grid, I: Irregular grid
 num_beams = 10001   # Number of beams
 launch_angles = [-25.0, 25.0]   # Beam launch angles
 step_size = 10.0   # Step size (meters)
 max_depth = bottom_depth+5   # Max depth (Meters)
 max_range = max(bath_ranges)+1  # Max range (Kilometers)
+
+# Only needed if opt3 is composed of more than one character
+opt4 = ["",  # C: Cerveny Type, F: Space-filling, M: Minimum width, W: WKB beams
+        ""]  # D: Use curvature doubling, S: Use standard curvature, Z: Use zeroing curvature
+
 precision = 1
-surface_Z = 446.0
-surface_c = 343.0
-bottom_Z = bottom_ss * bottom_rho * 1000
-water_top_Z = ssp[0] * 1029
-water_bottom_Z = ssp[-1] * 1029
 
 shot_1_ray = Write_RAY(dir=directory, 
                        filename=arms_save_file, 
@@ -72,13 +86,10 @@ shot_1_ray = Write_RAY(dir=directory,
                        freq=freq,
                        nmedia=nmedia,
                        sspopt=sspopt,
+                       surface_opt=surface_opt,
                        bottom_type=bottom_type,
                        roughness=roughness,
-                       bottom_depth = bottom_depth,
-                       bottom_ss=bottom_ss,
-                       bottom_alpha=bottom_alpha,
-                       bottom_rho=bottom_rho,
-                       bottom_shear=bottom_shear,
+                       bottom_opt=bottom_opt
                        nsd=nsd,
                        sd=sd,
                        nrd=nrd,
@@ -90,7 +101,8 @@ shot_1_ray = Write_RAY(dir=directory,
                        launch_angles=launch_angles,
                        step_size=step_size,
                        max_depth=max_depth,
-                       max_range=max_range)
+                       max_range=max_range,
+                       opt4=opt4)
 
 shot_1_ray.write_files()
 
@@ -109,12 +121,8 @@ shot_1_ray_plot = Read_RAY(directory=directory,
                            r_depth=rd[0], 
                            r_range=rr[0],
                            precision=precision,
-                           surface_Z=surface_Z,
-                           surface_c=surface_c,
-                           bottom_Z=bottom_Z,
-                           bottom_c=bottom_ss,
-                           water_top_Z=water_top_Z,
-                           water_bottom_Z=water_bottom_Z)
+                           bottom_opt=bottom_opt,
+                           surface_opt=surface_opt)
 
 shot_1_ray_plot.plot_ray_profile()
 plt.show()
