@@ -44,7 +44,7 @@ sspopt = ["S",  # S: Cubic Spline Interpolation, C: C-linear interpolation, N: N
           "F",  # F: attenuation corresponds to (dB/m)kHz, L: attenuation corresponds to parameter loss, M: attenuation corresponds to dB/m, N: attenuation corresponds to Nepers/m, Q: attenuation corresponds to a Q-factor, W: attenuation corresponds to dB/wavelength
           " ",  # T: Opptional parameter for Thorpe volume attenuation
           "*"]  # *: Use if including an *.ati file for surface shape
-surface_opt = [min(ati_depths),  # Bottom depth (m)
+surface_opt = [min(ati_depths),  # Surface depth (m)
                350.0,            # Compressional Speed (m/s)
                0.0,              # Shear Speed (m/s)
                1.8,              # Density (g/cm^3)

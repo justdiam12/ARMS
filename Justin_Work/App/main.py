@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit,
-    QPushButton, QGridLayout, QMessageBox
+    QPushButton, QGridLayout, QMessageBox, QFileDialog
 )
 
 # Setup paths and imports
@@ -74,7 +74,7 @@ class TLViewerApp(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Transmission Loss App")
-        self.setGeometry(100, 100, 400, 200)
+        self.setGeometry(100, 100, 1400, 600)
         self.setup_ui()
 
     def setup_ui(self):
@@ -82,6 +82,7 @@ class TLViewerApp(QWidget):
 
         # Field labels and entries
         self.fields = {
+            "Bellhop Executable": QLineEdit(),
             "Source Longitude": QLineEdit(),
             "Source Latitude": QLineEdit(),
             "Receiver Longitude": QLineEdit(),
@@ -111,12 +112,97 @@ class TLViewerApp(QWidget):
             "Receiver Depths": QLineEdit(),
             "Number of Receiver Ranges": QLineEdit(),
             "Receiver Ranges": QLineEdit(),
+            "Ray Compute Type": QLineEdit(),
+            "Number of Beams": QLineEdit(),
+            "Launch Angles": QLineEdit(),
+            "Step Size (m)": QLineEdit()
         }
-
+        line = -1
         for i, (label_text, line_edit) in enumerate(self.fields.items()):
-            label = QLabel(label_text)
-            layout.addWidget(label, i, 0)
-            layout.addWidget(line_edit, i, 1)
+            # Ordering the rows and columns
+            j = i % 10
+            if i % 10 == 0:
+                line += 1
+            # Custom buttons for each option
+            if label_text == "Bellhop Executable":
+                browse_button = QPushButton("Browse")
+                browse_button.clicked.connect(self.browse_bellhop_executable)
+                bellhop_layout = QGridLayout()
+                label = QLabel(label_text)
+                bellhop_layout.addWidget(label, 0, 0)
+                bellhop_layout.addWidget(line_edit, 0, 1)
+                bellhop_layout.addWidget(browse_button, 0, 2)
+                layout.addLayout(bellhop_layout, j, 2 * line, 1, 2) 
+            elif label_text == "Source Longitude":
+                continue
+            elif label_text == "Source Latitude": 
+                continue
+            elif label_text == "Receiver Longitude":
+                continue
+            elif label_text == "Receiver Latitude":
+                continue
+            elif label_text == "Frequency (Hz)":
+                continue
+            elif label_text == "SSPOPT(1)":
+                continue
+            elif label_text == "SSPOPT(2)":
+                continue
+            elif label_text == "SSPOPT(3)":
+                continue
+            elif label_text == "SSPOPT(4)":
+                continue
+            elif label_text == "SSPOPT(5)":
+                continue
+            elif label_text == "Surface Height":
+                continue
+            elif label_text == "Surface Compressional Speed":
+                continue 
+            elif label_text == "Surface Shear Speed": 
+                continue
+            elif label_text == "Surface Density":
+                continue
+            elif label_text == "Surface Attenuation":
+                continue
+            elif label_text == "Bottom Type": 
+                continue
+            elif label_text == "Include Bathymetry":
+                continue
+            elif label_text == "Roughness": 
+                continue
+            elif label_text == "Bottom Height":
+                continue
+            elif label_text == "Bottom Compressional Speed":
+                continue
+            elif label_text == "Bottom Shear Speed":
+                continue
+            elif label_text == "Bottom Density":
+                continue
+            elif label_text == "Bottom Attenuation":
+                continue
+            elif label_text == "Number of Source Depths":
+                continue
+            elif label_text == "Source Depths":
+                continue
+            elif label_text == "Number of Receiver Depths":
+                continue
+            elif label_text == "Receiver Depths":
+                continue
+            elif label_text == "Number of Receiver Ranges":
+                continue
+            elif label_text == "Receiver Ranges": 
+                continue
+            elif label_text == "Ray Compute Type": 
+                continue
+            elif label_text == "Number of Beams": 
+                continue
+            elif label_text == "Launch Angles": 
+                continue
+            elif label_text == "Step Size (m)": 
+                continue
+            else:
+                label = QLabel(label_text)
+                layout.addWidget(label, j, 2 * line)
+                layout.addWidget(line_edit, j, 2 * line + 1)
 
         # Run button
         run_button = QPushButton("Run")
@@ -124,6 +210,11 @@ class TLViewerApp(QWidget):
         layout.addWidget(run_button, len(self.fields), 0, 1, 2)
 
         self.setLayout(layout)
+
+    def browse_bellhop_executable(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select Bellhop Executable")
+        if file_path:
+            self.fields["Bellhop Executable"].setText(file_path)
 
     def run(self):
         try:
