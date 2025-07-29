@@ -83,6 +83,12 @@ class TLViewerApp(QWidget):
         # Field labels and entries
         self.fields = {
             "Bellhop Executable": QLineEdit(),
+            "SSP Directory": QLineEdit(),
+            "Bathymetry Directory": QLineEdit(),
+            "Altimetry Directory": QLineEdit(),
+            "Filename": QLineEdit(),
+            "Data file directory": QLineEdit(),
+            "Save file directory": QLineEdit(),
             "Source Longitude": QLineEdit(),
             "Source Latitude": QLineEdit(),
             "Receiver Longitude": QLineEdit(),
@@ -133,72 +139,110 @@ class TLViewerApp(QWidget):
                 bellhop_layout.addWidget(line_edit, 0, 1)
                 bellhop_layout.addWidget(browse_button, 0, 2)
                 layout.addLayout(bellhop_layout, j, 2 * line, 1, 2) 
-            elif label_text == "Source Longitude":
-                continue
-            elif label_text == "Source Latitude": 
-                continue
-            elif label_text == "Receiver Longitude":
-                continue
-            elif label_text == "Receiver Latitude":
-                continue
-            elif label_text == "Frequency (Hz)":
-                continue
-            elif label_text == "SSPOPT(1)":
-                continue
-            elif label_text == "SSPOPT(2)":
-                continue
-            elif label_text == "SSPOPT(3)":
-                continue
-            elif label_text == "SSPOPT(4)":
-                continue
-            elif label_text == "SSPOPT(5)":
-                continue
-            elif label_text == "Surface Height":
-                continue
-            elif label_text == "Surface Compressional Speed":
-                continue 
-            elif label_text == "Surface Shear Speed": 
-                continue
-            elif label_text == "Surface Density":
-                continue
-            elif label_text == "Surface Attenuation":
-                continue
-            elif label_text == "Bottom Type": 
-                continue
-            elif label_text == "Include Bathymetry":
-                continue
-            elif label_text == "Roughness": 
-                continue
-            elif label_text == "Bottom Height":
-                continue
-            elif label_text == "Bottom Compressional Speed":
-                continue
-            elif label_text == "Bottom Shear Speed":
-                continue
-            elif label_text == "Bottom Density":
-                continue
-            elif label_text == "Bottom Attenuation":
-                continue
-            elif label_text == "Number of Source Depths":
-                continue
-            elif label_text == "Source Depths":
-                continue
-            elif label_text == "Number of Receiver Depths":
-                continue
-            elif label_text == "Receiver Depths":
-                continue
-            elif label_text == "Number of Receiver Ranges":
-                continue
-            elif label_text == "Receiver Ranges": 
-                continue
-            elif label_text == "Ray Compute Type": 
-                continue
-            elif label_text == "Number of Beams": 
-                continue
-            elif label_text == "Launch Angles": 
-                continue
-            elif label_text == "Step Size (m)": 
-                continue
+            elif label_text == "SSP Directory":
+                ssp_browse = QPushButton("Browse")
+                ssp_browse.clicked.connect(self.browse_ssp_executable)
+                ssp_layout = QGridLayout()
+                label = QLabel(label_text)
+                ssp_layout.addWidget(label, 0, 0)
+                ssp_layout.addWidget(line_edit, 0, 1)
+                ssp_layout.addWidget(ssp_browse, 0, 2)
+                layout.addLayout(ssp_layout, j, 2 * line, 1, 2)
+            elif label_text == "Bathymetry Directory":
+                bty_browse = QPushButton("Browse")
+                bty_browse.clicked.connect(self.browse_bty_executable)
+                bty_layout = QGridLayout()
+                label = QLabel(label_text)
+                bty_layout.addWidget(label, 0, 0)
+                bty_layout.addWidget(line_edit, 0, 1)
+                bty_layout.addWidget(bty_browse, 0, 2)
+                layout.addLayout(bty_layout, j, 2 * line, 1, 2)
+            elif label_text == "Altimetry Directory":
+                alt_browse = QPushButton("Browse")
+                alt_browse.clicked.connect(self.browse_alt_executable)
+                alt_layout = QGridLayout()
+                label = QLabel(label_text)
+                alt_layout.addWidget(label, 0, 0)
+                alt_layout.addWidget(line_edit, 0, 1)
+                alt_layout.addWidget(alt_browse, 0, 2)
+                layout.addLayout(alt_layout, j, 2 * line, 1, 2)
+            elif label_text == "Filename":
+                filename_layout = QGridLayout()
+                label = QLabel(label_text)
+                filename_layout.addWidget(label, 0, 0)
+                filename_layout.addWidget(line_edit, 0, 1)
+                filename_layout.addWidget(QLabel("(no extensions included)"), 0, 2)
+                layout.addLayout(filename_layout, j, 2 * line, 1, 2) 
+            # elif label_text == "Data file directory":
+            #     continue
+            # elif label_text == "Save file directory":
+            #     continue
+            # elif label_text == "Source Longitude":
+            #     continue
+            # elif label_text == "Source Latitude": 
+            #     continue
+            # elif label_text == "Receiver Longitude":
+            #     continue
+            # elif label_text == "Receiver Latitude":
+            #     continue
+            # elif label_text == "Frequency (Hz)":
+            #     continue
+            # elif label_text == "SSPOPT(1)":
+            #     continue
+            # elif label_text == "SSPOPT(2)":
+            #     continue
+            # elif label_text == "SSPOPT(3)":
+            #     continue
+            # elif label_text == "SSPOPT(4)":
+            #     continue
+            # elif label_text == "SSPOPT(5)":
+            #     continue
+            # elif label_text == "Surface Height":
+            #     continue
+            # elif label_text == "Surface Compressional Speed":
+            #     continue 
+            # elif label_text == "Surface Shear Speed": 
+            #     continue
+            # elif label_text == "Surface Density":
+            #     continue
+            # elif label_text == "Surface Attenuation":
+            #     continue
+            # elif label_text == "Bottom Type": 
+            #     continue
+            # elif label_text == "Include Bathymetry":
+            #     continue
+            # elif label_text == "Roughness": 
+            #     continue
+            # elif label_text == "Bottom Height":
+            #     continue
+            # elif label_text == "Bottom Compressional Speed":
+            #     continue
+            # elif label_text == "Bottom Shear Speed":
+            #     continue
+            # elif label_text == "Bottom Density":
+            #     continue
+            # elif label_text == "Bottom Attenuation":
+            #     continue
+            # elif label_text == "Number of Source Depths":
+            #     continue
+            # elif label_text == "Source Depths":
+            #     continue
+            # elif label_text == "Number of Receiver Depths":
+            #     continue
+            # elif label_text == "Receiver Depths":
+            #     continue
+            # elif label_text == "Number of Receiver Ranges":
+            #     continue
+            # elif label_text == "Receiver Ranges": 
+            #     continue
+            # elif label_text == "Ray Compute Type": 
+            #     continue
+            # elif label_text == "Number of Beams": 
+            #     continue
+            # elif label_text == "Launch Angles": 
+            #     continue
+            # elif label_text == "Step Size (m)": 
+            #     continue
             else:
                 label = QLabel(label_text)
                 layout.addWidget(label, j, 2 * line)
@@ -215,6 +259,21 @@ class TLViewerApp(QWidget):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Bellhop Executable")
         if file_path:
             self.fields["Bellhop Executable"].setText(file_path)
+    
+    def browse_ssp_executable(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select SSP .mat File")
+        if file_path:
+            self.fields["SSP Directory"].setText(file_path)
+
+    def browse_bty_executable(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select BTY .mat File")
+        if file_path:
+            self.fields["Bathymetry Directory"].setText(file_path)
+
+    def browse_alt_executable(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select ALT .mat File")
+        if file_path:
+            self.fields["Altimetry Directory"].setText(file_path)
 
     def run(self):
         try:
