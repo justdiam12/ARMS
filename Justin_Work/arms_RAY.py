@@ -23,6 +23,8 @@ bath_ranges = np.squeeze(np.array(track_info["distances"]), axis=0) # Meters
 bath_depths = np.squeeze(np.array(track_info["profile"]), axis=0)
 ati_depths = np.ones_like(bath_ranges) * 10 * np.sin(2*np.pi*bath_ranges)
 
+# io.savemat(os.path.join("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/App/bty_ssp_ati", "ati.mat"), {"ati": ati_depths}, {"ati_ranges": bath_ranges})
+
 # Sound Speed Profile (.ssp file info)
 ssp_data = io.loadmat(os.path.join(track_dir, "ARMS_firstDay_CTD_info.mat"))
 ssp_ = np.squeeze(np.array(ssp_data["Sound_velocity"]), axis=1) # Meters per second
@@ -35,6 +37,8 @@ ssp = np.append(ssp_, ssp_extra)
 ssp_depths = np.append(ssp_depths_, ssp_depths_extra)
 ssp = np.append(1470, ssp)
 ssp_depths = np.append(-10, ssp_depths)
+
+# io.savemat(os.path.join("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/App/bty_ssp_ati", "ssp.mat"), {"ssp": ssp}, {"ssp_depths": ssp_depths})
 
 # Environmental Information (.env file info)
 freq = 100.0   # Hz

@@ -497,6 +497,13 @@ class TLViewerApp(QWidget):
         # Set default options based on the selected default
         default_option = self.default_dropdown.currentText()
         if default_option == "Eigenrays":
+            self.fields["Bellhop Executable"].setText(os.path.join(os.getcwd(),"Justin_Work/App/bellhop_exe/bellhopcxx"))
+            self.fields["SSP File"].setText(os.path.join(os.getcwd(),"Justin_Work/App/bty_ssp_ati/ssp.mat"))
+            self.fields["Bathymetry File"].setText(os.path.join(os.getcwd(),"Justin_Work/App/bty_ssp_ati/bty.mat"))
+            self.fields["Altimetry File"].setText(os.path.join(os.getcwd(),"Justin_Work/App/bty_ssp_ati/ati.mat"))
+            self.fields["Filename"].setText("run_eigenrays_3500")
+            self.fields["Data File Directory"].setText("runs/")
+            self.fields["Save File Directory"].setText("run_saves/")
             self.fields["Frequency"].setText("3500.0")
             self.fields["SSPOPT(1)"].setCurrentText("S: Cubic Spline Interpolation")
             self.fields["SSPOPT(2)"].setCurrentText("V: Vacuum above surface (SURFACE-LINE not required)")
@@ -526,9 +533,19 @@ class TLViewerApp(QWidget):
             self.fields["Number of Beams"].setText("1001")
             self.fields["Launch Angles"].setText("-89.0, 89.0")
             self.fields["Step Size"].setText("10.0")
+            # Plot bathymetry
+            file_path = self.fields["Bathymetry File"].text()
+            if file_path:
+                try:
+                    self.plot_bathymetry(file_path)
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to plot bathymetry: {e}")
         elif default_option == "Transmission Loss":
-            self.fields["Bellhop Executable"].setText("Bellhop Executables/bin/bellhopcxx")
-            
+            self.fields["Bellhop Executable"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bellhop_exe/bellhopcxx"))
+            self.fields["SSP File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ssp.mat"))
+            self.fields["Bathymetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/bty.mat"))
+            self.fields["Altimetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ati.mat"))
+            self.fields["Filename"].setText("run_tl_3500")
             self.fields["Data File Directory"].setText("runs/")
             self.fields["Save File Directory"].setText("run_saves/")
             self.fields["Frequency"].setText("3500.0")
@@ -560,6 +577,16 @@ class TLViewerApp(QWidget):
             self.fields["Number of Beams"].setText("0")
             self.fields["Launch Angles"].setText("-89.0, 89.0")
             self.fields["Step Size"].setText("0.0")
+            # Plot bathymetry
+            file_path = self.fields["Bathymetry File"].text()
+            if file_path:
+                try:
+                    self.plot_bathymetry(file_path)
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to plot bathymetry: {e}")
+    
+    def plot_bathymetry(self, file_path):
+        return
 
     def run(self):
         # Read and convert input values
