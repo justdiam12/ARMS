@@ -76,14 +76,20 @@ class Write_RAY:
             f.write(f"'{self.filename}'\t\t\t! TITLE\n")
             f.write(f"{self.freq}\t\t\t! FREQ (Hz)\n")
             f.write(f"{self.nmedia}\t\t\t! NMEDIA\n")
-            f.write(f"'{self.sspopt[0]}{self.sspopt[1]}{self.sspopt[2]}{self.sspopt[3]}{self.sspopt[4]}'\t\t\t! SSPOPT\n")
+            if self.sspopt[3] == "' '":
+                f.write(f"'{self.sspopt[0]}{self.sspopt[1]}{self.sspopt[2]} {self.sspopt[4]}'\t\t\t! SSPOPT\n")
+            else:
+                f.write(f"'{self.sspopt[0]}{self.sspopt[1]}{self.sspopt[2]}{self.sspopt[3]}{self.sspopt[4]}'\t\t\t! SSPOPT\n")
             if self.sspopt[1] == "A":
                 f.write(f"{self.surface_opt[0]:.1f}  {self.surface_opt[1]:.2f}  {self.surface_opt[2]:.1f}  {self.surface_opt[3]:.1f}  {self.surface_opt[4]:.1f} /\t\t\t! Surface depth, compressional speed, shear speed, density, and attenuation\n")
             f.write(f"{len(self.ssp_depth)}  {min(self.ssp_depth):.1f}  {max(self.ssp_depth):.1f}\t\t\t! DEPTH of bottom (m)\n")
             for d, s in zip(self.ssp_depth, self.ssp):
                 f.write(f"{d:.1f}  {s:.2f}  /\n")
             f.write("\n")
-            f.write(f"'{self.bottom_type[0]}{self.bottom_type[1]}' {self.roughness}\t\t\t! BOTTOM TYPE, roughness\n")
+            if self.bottom_type[1] == "' '":
+                f.write(f"'{self.bottom_type[0]}' {self.roughness}\t\t\t! BOTTOM TYPE, roughness\n")
+            else:
+                f.write(f"'{self.bottom_type[0]}{self.bottom_type[1]}' {self.roughness}\t\t\t! BOTTOM TYPE, roughness\n")
             f.write(f"{self.bottom_opt[0]:.1f}  {self.bottom_opt[1]:.2f}  {self.bottom_opt[2]:.1f}  {self.bottom_opt[3]:.1f}  {self.bottom_opt[4]:.1f} /\t\t\t! Bottom depth, compressional speed, shear speed, density, and attenuation\n")
             f.write("\n")
             f.write(f"{self.nsd}\t\t\t! NSD: Number of source depths\n")

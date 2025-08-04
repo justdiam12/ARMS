@@ -148,8 +148,8 @@ lat_end=47.71
 save_dir = "/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Output/dabob_bath.png"
 
 # Create the map
-dabob_map, lon_range, lat_range = map_2D(directory="/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/Collected_Dabob_Bathymetry_combined.xlsx")
+# dabob_map, lon_range, lat_range = map_2D(directory="/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/Collected_Dabob_Bathymetry_combined.xlsx")
 # plot_2D_bathy(dabob_map, lon_range, lat_range, save_dir="/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Ouput/dabob_bath.png")
-profile, distances = map_1D(bath_map=dabob_map, lon_range=lon_range, lat_range=lat_range, lon_start=lon_start, lon_end=lon_end, lat_start=lat_start, lat_end=lat_end, num_points=200)
+# profile, distances = map_1D(bath_map=dabob_map, lon_range=lon_range, lat_range=lat_range, lon_start=lon_start, lon_end=lon_end, lat_start=lat_start, lat_end=lat_end, num_points=200)
 # plot_1D_bathy(profile, distances)
-plot_all(dabob_map, lon_range, lat_range, profile, distances, lon_start=lon_start, lon_end=lon_end, lat_start=lat_start, lat_end=lat_end, save_dir=save_dir)
+# plot_all(dabob_map, lon_range, lat_range, profile, distances, lon_start=lon_start, lon_end=lon_end, lat_start=lat_start, lat_end=lat_end, save_dir=None)
