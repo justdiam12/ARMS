@@ -408,7 +408,8 @@ class TLViewerApp(QWidget):
         self.default_dropdown = QComboBox()
         self.default_dropdown.addItems([
             "Eigenrays",
-            "Transmission Loss"
+            "Ray Coordinates",
+            "Coherent Transmission Loss"
         ])
         default_button = QPushButton("Set Default")
         default_layout.addWidget(default_label, 0, 0)
@@ -420,11 +421,8 @@ class TLViewerApp(QWidget):
 
         # Run Button
         run_button = QPushButton("Run")
-        default_option = self.default_dropdown.currentText()
-        if default_option == "Eigenrays":
-            run_button.clicked.connect(self.run)
+        run_button.clicked.connect(self.run)
         self.layout.addWidget(run_button, len(self.fields), 4, 1, 2)
-
         self.setLayout(self.layout)
 
 
@@ -505,6 +503,57 @@ class TLViewerApp(QWidget):
             self.fields["Number of Receiver Ranges"].setText("1")
             self.fields["Receiver Ranges"].setText("7.0")
             self.fields["Ray Compute Type"].setCurrentText("E: Write Eigenray coordinates")
+            self.fields["Number of Beams"].setText("10001")
+            self.fields["Launch Angles"].setText("-25.0, 25.0")
+            self.fields["Step Size"].setText("10.0")
+            # Plot bathymetry
+            file_path = self.fields["Bathymetry File"].text()
+            if file_path:
+                try:
+                    # self.plot_canvas = Bathy_Canvas(self, file_path=file_path, width=8, height=6, dpi=300)
+                    # self.layout.addWidget(self.plot_canvas, 0, 6, 24, 10)
+                    # self.plot_canvas.update_plot(np.linspace(0, 10, 100), np.random.rand(100))  # Example data
+                    return
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to plot bathymetry: {e}")
+        elif default_option == "Ray Coordinates":
+            self.fields["Bellhop Executable"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bellhop_exe/bellhopcxx"))
+            self.fields["SSP File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ssp.mat"))
+            self.fields["Bathymetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/bty.mat"))
+            self.fields["Altimetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ati.mat"))
+            self.fields["Filename"].setText("run_ray_coor_3500")
+            self.fields["Data File Directory"].setText(os.path.join(os.getcwd(), "Justin_Work/App/runs/"))
+            self.fields["Save File Directory"].setText(os.path.join(os.getcwd(), "Justin_Work/App/run_saves/"))
+            self.fields["Source Longitude"].setText("-122.83")
+            self.fields["Source Latitude"].setText("47.77")
+            self.fields["Receiver Longitude"].setText("-122.85")
+            self.fields["Receiver Latitude"].setText("47.71")
+            self.fields["Frequency"].setText("3500.0")
+            self.fields["SSPOPT(1)"].setCurrentText("S: Cubic Spline Interpolation")
+            self.fields["SSPOPT(2)"].setCurrentText("A: Acoustic half-space (Surface information required)")
+            self.fields["SSPOPT(3)"].setCurrentText("F: attenuation corresponds to (dB/m)kHz")
+            self.fields["SSPOPT(4)"].setCurrentText("' ': Default parameter")   
+            self.fields["SSPOPT(5)"].setCurrentText("*: Use if including an *.ati file for surface shape")
+            self.fields["Surface Height"].setText("0.0")
+            self.fields["Surface Compressional Speed"].setText("343.0")
+            self.fields["Surface Shear Speed"].setText("0.0")
+            self.fields["Surface Density"].setText("1.2")
+            self.fields["Surface Attenuation"].setText("0.0")
+            self.fields["Bottom Type"].setCurrentText("A: acoustic half-space below water column (need BOTTOM-LINE)")
+            self.fields["Include Bathymetry"].setCurrentText("*: include if wanting to use a *.bty file")
+            self.fields["Roughness"].setText("0.0")
+            self.fields["Bottom Height"].setText("0.0")
+            self.fields["Bottom Compressional Speed"].setText("1600.0")
+            self.fields["Bottom Shear Speed"].setText("0.0")
+            self.fields["Bottom Density"].setText("1.8")
+            self.fields["Bottom Attenuation"].setText("0.0")
+            self.fields["Number of Source Depths"].setText("1")
+            self.fields["Source Depths"].setText("20.0")
+            self.fields["Number of Receiver Depths"].setText("1")
+            self.fields["Receiver Depths"].setText("20.0")
+            self.fields["Number of Receiver Ranges"].setText("1")
+            self.fields["Receiver Ranges"].setText("7.0")
+            self.fields["Ray Compute Type"].setCurrentText("R: Write ray coordinates")
             self.fields["Number of Beams"].setText("10001")
             self.fields["Launch Angles"].setText("-25.0, 25.0")
             self.fields["Step Size"].setText("10.0")
@@ -654,7 +703,7 @@ class TLViewerApp(QWidget):
             # Fix ray_compute
             ray_compute_type = np.append(ray_compute_type, ['', '', '', ''])
 
-            if ray_compute_type[0] == 'E':
+            if ray_compute_type[0] == 'E' or ray_compute_type[0] == 'R':
                 ray_shot = Write_RAY(dir=data_dir, 
                                     filename=filename, 
                                     ssp_depths=ssp_depths,
