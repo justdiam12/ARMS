@@ -24,17 +24,21 @@ class Bathy_Canvas(FigureCanvas):
         self.ax = self.fig.add_subplot(111)
         super().__init__(self.fig)
     
+
     def update_plot(self, x, y):
         self.plot_canvas.ax.clear()
         self.plot_canvas.ax.plot(x, y)
         self.plot_canvas.draw()
 
+
+# UI Class
 class TLViewerApp(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Transmission Loss App")
         self.setGeometry(100, 100, 1600, 800)
         self.setup_ui()
+
 
     def setup_ui(self):
         self.layout = QGridLayout()
@@ -423,35 +427,42 @@ class TLViewerApp(QWidget):
 
         self.setLayout(self.layout)
 
+
     def browse_bellhop_executable(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Bellhop Executable")
         if file_path:
             self.fields["Bellhop Executable"].setText(file_path)
     
+
     def browse_ssp_mat(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select SSP .mat File")
         if file_path:
             self.fields["SSP File"].setText(file_path)
+
 
     def browse_bty_mat(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select BTY .mat File")
         if file_path:
             self.fields["Bathymetry File"].setText(file_path)
 
+
     def browse_alt_mat(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select ALT .mat File")
         if file_path:
             self.fields["Altimetry File"].setText(file_path)
+
 
     def browse_df_dir(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Data File Directory")
         if directory:
             self.fields["Data File Directory"].setText(directory)
 
+
     def browse_sf_dir(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Save File Directory")
         if directory:
             self.fields["Save File Directory"].setText(directory)
+
 
     def set_default_options(self):
         # Set default options based on the selected default
@@ -559,8 +570,10 @@ class TLViewerApp(QWidget):
                 except Exception as e:
                     QMessageBox.critical(self, "Error", f"Failed to plot bathymetry: {e}")
     
+
     def plot_bathymetry(self, file_path):
         return
+
 
     def run(self):
         try:

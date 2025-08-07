@@ -270,7 +270,11 @@ class Read_TL:
         pressure = 10 * np.log10(pressure / np.max(pressure))
         levs = np.linspace(-30, 0, 31)
 
+        plt.figure(figsize=(12, 8))
         plt.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
+        plt.colorbar(label="Relative TL (dB)")
+        plt.gca().set_aspect('auto')
+        plt.tight_layout()
         plt.gca().invert_yaxis()
 
         plt.title(f"{self.tl_file}, Frequency: {self.freqs[0]/1000:.1f} kHz")
