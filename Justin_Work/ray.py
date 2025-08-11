@@ -173,7 +173,8 @@ class Read_RAY:
     def __init__(self, 
                  directory=None, 
                  output_directory=None,
-                 ray_file=None, 
+                 ray_file=None,
+                 ray_compute_type=None, 
                  ssp_depths=None, 
                  ssp=None, 
                  bath_ranges=None, 
@@ -189,6 +190,7 @@ class Read_RAY:
         self.dir = directory
         self.output_directory = output_directory
         self.ray_file = ray_file
+        self.ray_compute_type = ray_compute_type
         self.ssp_depths = ssp_depths
         self.ssp = ssp
         self.bath_ranges = bath_ranges
@@ -230,7 +232,17 @@ class Read_RAY:
                 r, z = map(float, l.strip().split())
                 ray.append((r, z))
                 line = line + 1
-            ray_data.append(ray) 
+            if self.ray_compute_type == "E" or self.ray_compute_type == 'E':
+                in_precision = 0
+                for i in range(len(self.r_depth)):
+                    if np.abs(ray[-1][1]-self.r_depth[i]) <= self.precision and np.abs(ray[-1][0]-self.r_range[0]*1000) <= self.precision:
+                        in_precision = 1
+                    else:
+                        continue
+                if in_precision == 1:
+                    ray_data.append(ray)
+            elif self.ray_compute_type == "R" or self.ray_compute_type == 'R':
+                ray_data.append(ray)
 
         return ray_data, alpha_data
 
@@ -251,54 +263,12 @@ class Read_RAY:
             # Plot ray
             axs[0].plot(r,z)
 
-            # if np.abs(z[-1] - self.r_depth) <= self.precision and np.abs(r[-1] - self.r_range) <= self.precision:
-            #     if alphas[i] < 0:
-            #         up_down = -1
-            #     elif alphas[i] > 0:
-            #         up_down = 1
-                
-            #     # Get the indices where the ray bounces off the surface or bottom
-            #     sign_change = np.diff(np.sign(np.diff(z)))
-            #     p_and_t = np.where(sign_change != 0)[0]
-            #     bounce_indices = p_and_t[np.where(np.diff(p_and_t) > 1)]
-            #     bounce_indices = np.append(bounce_indices, p_and_t[-1])
-
-                # # Get the reflection coefficient
-                # R_string = ""
-                # R = 1
-                # for b in range(len(bounce_indices)):
-                #     R_string = self.R_type(R_string, up_down)
-                #     if up_down == -1:
-                #         dr = np.abs(r[bounce_indices[b]] - r[bounce_indices[b]-10])
-                #         dz = np.abs(z[bounce_indices[b]] - z[bounce_indices[b]-10])
-                #         angle = np.degrees(np.arctan(dz/dr))
-                #         sin_angle = np.sin(np.radians(angle))
-                #         surface_Z = np.array(self.surface_Z, dtype=float)
-                #         water_top_Z = np.array(self.water_top_Z, dtype=float)
-                #         R = (surface_Z * sin_angle - water_top_Z * sin_angle) / (surface_Z * sin_angle + water_top_Z * sin_angle) * R
-                #         up_down = 1
-                #     else:
-                #         dr = np.abs(r[bounce_indices[b]] - r[bounce_indices[b]-10])
-                #         dz = np.abs(z[bounce_indices[b]] - z[bounce_indices[b]-10])
-                #         angle = np.degrees(np.arctan(dz/dr))
-                #         sin_angle = np.sin(np.radians(angle))
-                #         bottom_Z = np.array(self.bottom_Z, dtype=float)
-                #         water_bottom_Z = np.array(self.water_bottom_Z, dtype=float)
-                #         R = (bottom_Z * sin_angle - water_bottom_Z * sin_angle) / (bottom_Z * sin_angle + water_bottom_Z * sin_angle) * R
-                #         up_down = -1
-                
-                # if R_string not in self.bounce:
-                #     self.bounce.append(R_string)
-                #     self.alpha.append(alphas[i])
-                #     self.R = np.append(self.R, R) 
-                #     axs[0].plot(r,z, label=R_string)
-
-        # sea_surface = np.zeros((len(self.bath_ranges)))
         axs[0].invert_yaxis()
-        # axs[0].plot(self.bath_ranges, sea_surface, "--", color="black", linewidth=3)
         axs[0].plot(self.bath_ranges, self.ati_depths, "--", color="black", linewidth=3)
-        axs[0].plot(0, self.s_depth, "bo", linewidth=3)
-        axs[0].plot(self.r_range, self.r_depth, "ro", linewidth=3)
+        for i in range(len(self.s_depth)):
+            axs[0].plot(0, self.s_depth[i], "bo", linewidth=3)
+        for i in range(len(self.r_depth)):
+            axs[0].plot(self.r_range[0], self.r_depth[i], "ro", linewidth=3)
         axs[0].plot(self.bath_ranges, self.bath_depths, color="black", linewidth=3)
         axs[0].set_xlabel("Range (km)")
         axs[0].set_ylabel("Depth (m)")

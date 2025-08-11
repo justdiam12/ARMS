@@ -18,19 +18,6 @@ from Justin_Work.tl import Write_TL, Read_TL
 from pyat.pyat.readwrite import *
 from Justin_Work.bathymetry import *
 
-class Bathy_Canvas(FigureCanvas):
-    def __init__(self, parent=None, file_path=None, width=8, height=6, dpi=100):
-        self.fig = Figure(figsize=(width, height), dpi=dpi)
-        self.ax = self.fig.add_subplot(111)
-        super().__init__(self.fig)
-    
-
-    def update_plot(self, x, y):
-        self.plot_canvas.ax.clear()
-        self.plot_canvas.ax.plot(x, y)
-        self.plot_canvas.draw()
-
-
 # UI Class
 class TLViewerApp(QWidget):
     def __init__(self):
@@ -757,14 +744,15 @@ class TLViewerApp(QWidget):
                 ray_shot_plot = Read_RAY(directory=data_dir, 
                                         output_directory = save_dir,
                                         ray_file=filename, 
+                                        ray_compute_type=ray_compute_type[0],
                                         ssp_depths=ssp_depths, 
                                         ssp=ssp,
                                         bath_ranges=bath_ranges, 
                                         bath_depths=bath_depths, 
                                         ati_depths=ati_depths, 
-                                        s_depth=source_depths[0], 
-                                        r_depth=receiver_depths[0], 
-                                        r_range=receiver_ranges[0],
+                                        s_depth=source_depths, 
+                                        r_depth=receiver_depths, 
+                                        r_range=receiver_ranges,
                                         precision=1,
                                         bottom_opt=[max(bath_depths),
                                                     float(bottom_compressional_speed),

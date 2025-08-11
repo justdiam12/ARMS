@@ -63,8 +63,8 @@ bottom_opt = [max(bath_depths),  # Bottom depth (m)
               0.0]               # Bottom Attenuation (units specified by sspopt(3))
 nsd = 1   # NSD (Number of source depths)
 sd = [60.0]   # Source depth(s) (Meters)
-nrd = 1   # NRD (number of receiver depths)
-rd = [60.0]   # Receiver depths (Meters)
+nrd = 2   # NRD (number of receiver depths)
+rd = [20.0, 60.0]   # Receiver depths (Meters)
 nrr = 1   # NR (number of receiver ranges)
 rr = [max(bath_ranges)]   # Receiver ranges (km)
 ray_compute = ["E",  # A: Write amplitude and travel times, E: Write Eigenray coordinates, R: Write ray coordinates, C: Write coherent acoustic pressure, I: Write incoherent acoustic pressure, S: Write semi-coherent acoustic pressure
@@ -82,7 +82,7 @@ max_range = max(bath_ranges)+1  # Max range (Kilometers)
 opt4 = ["",  # C: Cerveny Type, F: Space-filling, M: Minimum width, W: WKB beams
         ""]  # D: Use curvature doubling, S: Use standard curvature, Z: Use zeroing curvature
 pair = 'L'  # L: linear interpolation, C: Curvilinear interpolation
-precision = 1
+precision = 15
 
 shot_1_ray = Write_RAY(dir=directory, 
                        filename=arms_save_file, 
@@ -121,14 +121,15 @@ os.system("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/bellhop
 shot_1_ray_plot = Read_RAY(directory=directory, 
                            output_directory = output_directory,
                            ray_file=arms_save_file, 
+                           ray_compute_type=ray_compute[0],
                            ssp_depths=ssp_depths, 
                            ssp=ssp,
                            bath_ranges=bath_ranges, 
                            bath_depths=bath_depths, 
                            ati_depths=ati_depths, 
-                           s_depth=sd[0], 
-                           r_depth=rd[0], 
-                           r_range=rr[0],
+                           s_depth=sd, 
+                           r_depth=rd, 
+                           r_range=rr,
                            precision=precision,
                            bottom_opt=bottom_opt,
                            surface_opt=surface_opt)
