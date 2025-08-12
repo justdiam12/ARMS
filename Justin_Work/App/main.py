@@ -403,14 +403,25 @@ class TLViewerApp(QWidget):
         default_layout.addWidget(self.default_dropdown, 0, 1)
         default_layout.addWidget(default_button, 0, 2)
         default_layout.setColumnStretch(1, 1)
-        self.layout.addLayout(default_layout, len(self.fields), 2, 1, 2)
+        self.layout.addLayout(default_layout, len(self.fields), 1, 1, 2)
         default_button.clicked.connect(self.set_default_options)
 
         # Run Button
+        run_label = QLabel("Run Type:")
+        run_layout = QGridLayout()
+        self.run_type_dropdown = QComboBox()
+        self.run_type_dropdown.addItems([
+            "Plot Bathymetry",
+            "Run Bellhop"
+        ])
         run_button = QPushButton("Run")
-        run_button.clicked.connect(self.run)
-        self.layout.addWidget(run_button, len(self.fields), 4, 1, 2)
-        self.setLayout(self.layout)
+        run_layout.addwidget(run_label, 0, 0)
+        run_layout.addwidget(self.run_type_dropdown, 0, 1)
+        run_layout.addwidget(self.run_button, 0, 2)
+        run_layout.addwidget(self.run_button, 0, 2)
+        run_layout.setColumnStretch(1, 1)
+        self.layout.addLayout(run_layout, len(self.fields), 3, 1, 2)
+        run_button.clicked.connect(self.select_run_type)
 
 
     def browse_bellhop_executable(self):
@@ -607,11 +618,17 @@ class TLViewerApp(QWidget):
                     QMessageBox.critical(self, "Error", f"Failed to plot bathymetry: {e}")
     
 
-    def plot_bathymetry(self, file_path):
+    def select_run_type(self):
+        run_option = self.run_type_dropdown.currentText()
+        if run_option == "Plot Bathymetry":
+            self.plot_bathy()
+        elif run_option == "Run Bellhop":
+            self.run_bellhop()
+
+    def plot_bathy(self):
         return
 
-
-    def run(self):
+    def run_bellhop(self):
         try:
             # Read and convert input values
             values = {}
@@ -630,10 +647,10 @@ class TLViewerApp(QWidget):
             filename = self.fields["Filename"].text()
             data_dir = self.fields["Data File Directory"].text()
             save_dir = self.fields["Save File Directory"].text()   
-            lon_start = values["Source Longitude"]
-            lat_start = values["Source Latitude"]
-            lon_end   = values["Receiver Longitude"]
-            lat_end   = values["Receiver Latitude"]
+            lon_start = np.float64(values["Source Longitude"])
+            lat_start = np.float64(values["Source Latitude"])
+            lon_end   = np.float64(values["Receiver Longitude"])
+            lat_end   = np.float64(values["Receiver Latitude"])
             freq      = values["Frequency"]
             sspopt1 = self.fields["SSPOPT(1)"].currentText().split(":")[0].strip()
             sspopt2 = self.fields["SSPOPT(2)"].currentText().split(":")[0].strip()
@@ -674,14 +691,19 @@ class TLViewerApp(QWidget):
             bath_map = np.array(bty_data["bath_map"], dtype=np.float64)
             lon_range = np.squeeze(np.array(bty_data["lon_range"], dtype=np.float64), axis=0)
             lat_range = np.squeeze(np.array(bty_data["lat_range"], dtype=np.float64), axis=0)
-            bath_depths, bath_ranges = map_1D(bath_map=bath_map, 
-                                            lon_range=lon_range, 
-                                            lat_range=lat_range, 
-                                            lon_start=np.float64(lon_start), 
-                                            lon_end=np.float64(lon_end), 
-                                            lat_start=np.float64(lat_start), 
-                                            lat_end=np.float64(lat_end),
-                                            num_points=200)
+
+            if  lon_start >= min(lon_range) and lon_start <= max(lon_range) and lat_start >= min(lat_range) and lat_start <= max(lat_range) and lon_end >= min(lon_range) and lon_end <= max(lon_range) and lat_end >= min(lat_range) and lat_end <= max(lat_range):
+                bath_depths, bath_ranges = map_1D(bath_map=bath_map, 
+                                                lon_range=lon_range, 
+                                                lat_range=lat_range, 
+                                                lon_start=lon_start, 
+                                                lon_end=lon_end, 
+                                                lat_start=lat_start, 
+                                                lat_end=lat_end,
+                                                num_points=200)
+            else:
+                QMessageBox.critical(self, "Error", "Source and receiver coordinates are outside the bathymetry range. Please check your inputs.")
+                return
 
             # ATI
             ati_data = io.loadmat(ati_file)
