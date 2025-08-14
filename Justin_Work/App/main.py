@@ -4,31 +4,36 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit,
-    QPushButton, QGridLayout, QMessageBox, QFileDialog,
+    QPushButton, QGridLayout, QFileDialog,
     QComboBox
 )
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 
 # Setup paths and imports
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # two levels up
 sys.path.append(root_dir)
-from Justin_Work.ray import Write_RAY, Read_RAY
-from Justin_Work.tl import Write_TL, Read_TL
-from pyat.pyat.readwrite import *
-from Justin_Work.bathymetry import *
+
+from Justin_Work.App.caas import run_caas
+from Justin_Work.App.default_cases import set_default_options
+from Justin_Work.App.run_types import plot_bathy, run_bellhop
 
 # UI Class
 class TLViewerApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Transmission Loss App")
-        self.setGeometry(100, 100, 1600, 800)
+        self.setWindowTitle("Bellhop UI")
+        screen = QApplication.primaryScreen().geometry()
+        self.setGeometry(screen.x() + 100, screen.y() + 100, screen.width() - 200, screen.height() - 200)
         self.setup_ui()
+
+    # Import member functions
+    run_caas = run_caas
+    set_default_options = set_default_options
+    plot_bathy = plot_bathy
+    run_bellhop = run_bellhop
 
 
     def setup_ui(self):
-        self.layout = QGridLayout()
+        self.layout = QGridLayout(self)
 
         # Field labels and entries
         self.fields = {
@@ -415,10 +420,9 @@ class TLViewerApp(QWidget):
             "Run Bellhop"
         ])
         run_button = QPushButton("Run")
-        run_layout.addwidget(run_label, 0, 0)
-        run_layout.addwidget(self.run_type_dropdown, 0, 1)
-        run_layout.addwidget(self.run_button, 0, 2)
-        run_layout.addwidget(self.run_button, 0, 2)
+        run_layout.addWidget(run_label, 0, 0)
+        run_layout.addWidget(self.run_type_dropdown, 0, 1)
+        run_layout.addWidget(run_button, 0, 2)
         run_layout.setColumnStretch(1, 1)
         self.layout.addLayout(run_layout, len(self.fields), 3, 1, 2)
         run_button.clicked.connect(self.select_run_type)
@@ -459,400 +463,13 @@ class TLViewerApp(QWidget):
         if directory:
             self.fields["Save File Directory"].setText(directory)
 
-
-    def set_default_options(self):
-        # Set default options based on the selected default
-        default_option = self.default_dropdown.currentText()
-        if default_option == "Eigenrays":
-            self.fields["Bellhop Executable"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bellhop_exe/bellhopcxx"))
-            self.fields["SSP File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ssp.mat"))
-            self.fields["Bathymetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/bty.mat"))
-            self.fields["Altimetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ati.mat"))
-            self.fields["Filename"].setText("run_eigenrays_3500")
-            self.fields["Data File Directory"].setText(os.path.join(os.getcwd(), "Justin_Work/App/runs/"))
-            self.fields["Save File Directory"].setText(os.path.join(os.getcwd(), "Justin_Work/App/run_saves/"))
-            self.fields["Source Longitude"].setText("-122.83")
-            self.fields["Source Latitude"].setText("47.77")
-            self.fields["Receiver Longitude"].setText("-122.85")
-            self.fields["Receiver Latitude"].setText("47.71")
-            self.fields["Frequency"].setText("3500.0")
-            self.fields["SSPOPT(1)"].setCurrentText("S: Cubic Spline Interpolation")
-            self.fields["SSPOPT(2)"].setCurrentText("A: Acoustic half-space (Surface information required)")
-            self.fields["SSPOPT(3)"].setCurrentText("F: attenuation corresponds to (dB/m)kHz")
-            self.fields["SSPOPT(4)"].setCurrentText("' ': Default parameter")   
-            self.fields["SSPOPT(5)"].setCurrentText("*: Use if including an *.ati file for surface shape")
-            self.fields["Surface Height"].setText("0.0")
-            self.fields["Surface Compressional Speed"].setText("343.0")
-            self.fields["Surface Shear Speed"].setText("0.0")
-            self.fields["Surface Density"].setText("1.2")
-            self.fields["Surface Attenuation"].setText("0.0")
-            self.fields["Bottom Type"].setCurrentText("A: acoustic half-space below water column (need BOTTOM-LINE)")
-            self.fields["Include Bathymetry"].setCurrentText("*: include if wanting to use a *.bty file")
-            self.fields["Roughness"].setText("0.0")
-            self.fields["Bottom Height"].setText("0.0")
-            self.fields["Bottom Compressional Speed"].setText("1600.0")
-            self.fields["Bottom Shear Speed"].setText("0.0")
-            self.fields["Bottom Density"].setText("1.8")
-            self.fields["Bottom Attenuation"].setText("0.0")
-            self.fields["Number of Source Depths"].setText("1")
-            self.fields["Source Depths"].setText("20.0")
-            self.fields["Number of Receiver Depths"].setText("1")
-            self.fields["Receiver Depths"].setText("20.0")
-            self.fields["Number of Receiver Ranges"].setText("1")
-            self.fields["Receiver Ranges"].setText("7.0")
-            self.fields["Ray Compute Type"].setCurrentText("E: Write Eigenray coordinates")
-            self.fields["Number of Beams"].setText("10001")
-            self.fields["Launch Angles"].setText("-25.0, 25.0")
-            self.fields["Step Size"].setText("10.0")
-            # Plot bathymetry
-            file_path = self.fields["Bathymetry File"].text()
-            if file_path:
-                try:
-                    # self.plot_canvas = Bathy_Canvas(self, file_path=file_path, width=8, height=6, dpi=300)
-                    # self.layout.addWidget(self.plot_canvas, 0, 6, 24, 10)
-                    # self.plot_canvas.update_plot(np.linspace(0, 10, 100), np.random.rand(100))  # Example data
-                    return
-                except Exception as e:
-                    QMessageBox.critical(self, "Error", f"Failed to plot bathymetry: {e}")
-        elif default_option == "Ray Coordinates":
-            self.fields["Bellhop Executable"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bellhop_exe/bellhopcxx"))
-            self.fields["SSP File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ssp.mat"))
-            self.fields["Bathymetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/bty.mat"))
-            self.fields["Altimetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ati.mat"))
-            self.fields["Filename"].setText("run_ray_coor_3500")
-            self.fields["Data File Directory"].setText(os.path.join(os.getcwd(), "Justin_Work/App/runs/"))
-            self.fields["Save File Directory"].setText(os.path.join(os.getcwd(), "Justin_Work/App/run_saves/"))
-            self.fields["Source Longitude"].setText("-122.83")
-            self.fields["Source Latitude"].setText("47.77")
-            self.fields["Receiver Longitude"].setText("-122.85")
-            self.fields["Receiver Latitude"].setText("47.71")
-            self.fields["Frequency"].setText("3500.0")
-            self.fields["SSPOPT(1)"].setCurrentText("S: Cubic Spline Interpolation")
-            self.fields["SSPOPT(2)"].setCurrentText("A: Acoustic half-space (Surface information required)")
-            self.fields["SSPOPT(3)"].setCurrentText("F: attenuation corresponds to (dB/m)kHz")
-            self.fields["SSPOPT(4)"].setCurrentText("' ': Default parameter")   
-            self.fields["SSPOPT(5)"].setCurrentText("*: Use if including an *.ati file for surface shape")
-            self.fields["Surface Height"].setText("0.0")
-            self.fields["Surface Compressional Speed"].setText("343.0")
-            self.fields["Surface Shear Speed"].setText("0.0")
-            self.fields["Surface Density"].setText("1.2")
-            self.fields["Surface Attenuation"].setText("0.0")
-            self.fields["Bottom Type"].setCurrentText("A: acoustic half-space below water column (need BOTTOM-LINE)")
-            self.fields["Include Bathymetry"].setCurrentText("*: include if wanting to use a *.bty file")
-            self.fields["Roughness"].setText("0.0")
-            self.fields["Bottom Height"].setText("0.0")
-            self.fields["Bottom Compressional Speed"].setText("1600.0")
-            self.fields["Bottom Shear Speed"].setText("0.0")
-            self.fields["Bottom Density"].setText("1.8")
-            self.fields["Bottom Attenuation"].setText("0.0")
-            self.fields["Number of Source Depths"].setText("1")
-            self.fields["Source Depths"].setText("20.0")
-            self.fields["Number of Receiver Depths"].setText("1")
-            self.fields["Receiver Depths"].setText("20.0")
-            self.fields["Number of Receiver Ranges"].setText("1")
-            self.fields["Receiver Ranges"].setText("7.0")
-            self.fields["Ray Compute Type"].setCurrentText("R: Write ray coordinates")
-            self.fields["Number of Beams"].setText("10001")
-            self.fields["Launch Angles"].setText("-25.0, 25.0")
-            self.fields["Step Size"].setText("10.0")
-            # Plot bathymetry
-            file_path = self.fields["Bathymetry File"].text()
-            if file_path:
-                try:
-                    # self.plot_canvas = Bathy_Canvas(self, file_path=file_path, width=8, height=6, dpi=300)
-                    # self.layout.addWidget(self.plot_canvas, 0, 6, 24, 10)
-                    # self.plot_canvas.update_plot(np.linspace(0, 10, 100), np.random.rand(100))  # Example data
-                    return
-                except Exception as e:
-                    QMessageBox.critical(self, "Error", f"Failed to plot bathymetry: {e}")
-        elif default_option == "Transmission Loss":
-            self.fields["Bellhop Executable"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bellhop_exe/bellhopcxx"))
-            self.fields["SSP File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ssp.mat"))
-            self.fields["Bathymetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/bty.mat"))
-            self.fields["Altimetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ati.mat"))
-            self.fields["Filename"].setText("run_tl_3500")
-            self.fields["Data File Directory"].setText(os.path.join(os.getcwd(), "Justin_Work/App/runs/"))
-            self.fields["Save File Directory"].setText(os.path.join(os.getcwd(), "Justin_Work/App/run_saves/"))
-            self.fields["Source Longitude"].setText("-122.83")
-            self.fields["Source Latitude"].setText("47.77")
-            self.fields["Receiver Longitude"].setText("-122.85")
-            self.fields["Receiver Latitude"].setText("47.71") 
-            self.fields["Frequency"].setText("3500.0")
-            self.fields["SSPOPT(1)"].setCurrentText("S: Cubic Spline Interpolation")
-            self.fields["SSPOPT(2)"].setCurrentText("V: Vacuum above surface (SURFACE-LINE not required)")
-            self.fields["SSPOPT(3)"].setCurrentText("F: attenuation corresponds to (dB/m)kHz")
-            self.fields["SSPOPT(4)"].setCurrentText("' ': Default parameter")   
-            self.fields["SSPOPT(5)"].setCurrentText("*: Use if including an *.ati file for surface shape")
-            self.fields["Surface Height"].setText("0.0")
-            self.fields["Surface Compressional Speed"].setText("343.0")
-            self.fields["Surface Shear Speed"].setText("0.0")
-            self.fields["Surface Density"].setText("1.2")
-            self.fields["Surface Attenuation"].setText("0.0")
-            self.fields["Bottom Type"].setCurrentText("A: acoustic half-space below water column (need BOTTOM-LINE)")
-            self.fields["Include Bathymetry"].setCurrentText("*: include if wanting to use a *.bty file")
-            self.fields["Roughness"].setText("0.0")
-            self.fields["Bottom Height"].setText("0.0")
-            self.fields["Bottom Compressional Speed"].setText("1600.0")
-            self.fields["Bottom Shear Speed"].setText("0.0")
-            self.fields["Bottom Density"].setText("1.8")
-            self.fields["Bottom Attenuation"].setText("0.0")
-            self.fields["Number of Source Depths"].setText("1")
-            self.fields["Source Depths"].setText("20.0")
-            self.fields["Number of Receiver Depths"].setText("201")
-            self.fields["Receiver Depths"].setText("0.0, 200.0")
-            self.fields["Number of Receiver Ranges"].setText("501")
-            self.fields["Receiver Ranges"].setText("0.0, 7.0")
-            self.fields["Ray Compute Type"].setCurrentText("C: Write coherent acoustic pressure")
-            self.fields["Number of Beams"].setText("0")
-            self.fields["Launch Angles"].setText("-89.0, 89.0")
-            self.fields["Step Size"].setText("0.0")
-            # Plot bathymetry
-            file_path = self.fields["Bathymetry File"].text()
-            if file_path:
-                try:
-                    # self.plot_canvas = Bathy_Canvas(self, file_path=file_path, width=8, height=6, dpi=300)
-                    # self.plot_canvas.update_plot(np.linspace(0, 10, 100), np.random.rand(100))  # Example data
-                    # self.layout.addWidget(self.plot_canvas, 0, 6, 24, 10)
-                    return
-                except Exception as e:
-                    QMessageBox.critical(self, "Error", f"Failed to plot bathymetry: {e}")
-    
-
     def select_run_type(self):
         run_option = self.run_type_dropdown.currentText()
         if run_option == "Plot Bathymetry":
             self.plot_bathy()
         elif run_option == "Run Bellhop":
             self.run_bellhop()
-
-    def plot_bathy(self):
-        return
-
-    def run_bellhop(self):
-        try:
-            # Read and convert input values
-            values = {}
-            for name, widget in self.fields.items():
-                if isinstance(widget, QLineEdit):
-                    values[name] = widget.text()
-                elif isinstance(widget, QComboBox):
-                    values[name] = widget.currentText()
-                else:
-                    values[name] = None
-
-            bellhop_executable = self.fields["Bellhop Executable"].text()
-            ssp_file = self.fields["SSP File"].text()
-            bathy_file = self.fields["Bathymetry File"].text()
-            ati_file = self.fields["Altimetry File"].text()
-            filename = self.fields["Filename"].text()
-            data_dir = self.fields["Data File Directory"].text()
-            save_dir = self.fields["Save File Directory"].text()   
-            lon_start = np.float64(values["Source Longitude"])
-            lat_start = np.float64(values["Source Latitude"])
-            lon_end   = np.float64(values["Receiver Longitude"])
-            lat_end   = np.float64(values["Receiver Latitude"])
-            freq      = values["Frequency"]
-            sspopt1 = self.fields["SSPOPT(1)"].currentText().split(":")[0].strip()
-            sspopt2 = self.fields["SSPOPT(2)"].currentText().split(":")[0].strip()
-            sspopt3 = self.fields["SSPOPT(3)"].currentText().split(":")[0].strip()
-            sspopt4 = self.fields["SSPOPT(4)"].currentText().split(":")[0].strip()
-            sspopt5 = self.fields["SSPOPT(5)"].currentText().split(":")[0].strip()
-            surface_height = values["Surface Height"]
-            surface_compressional_speed = values["Surface Compressional Speed"]
-            surface_shear_speed = values["Surface Shear Speed"]
-            surface_density = values["Surface Density"]
-            surface_attenuation = values["Surface Attenuation"]
-            bottom_type = self.fields["Bottom Type"].currentText().split(":")[0].strip()
-            include_bathymetry = self.fields["Include Bathymetry"].currentText().split(":")[0].strip()
-            roughness = values["Roughness"]
-            bottom_height = values["Bottom Height"]
-            bottom_compressional_speed = values["Bottom Compressional Speed"]
-            bottom_shear_speed = values["Bottom Shear Speed"]             
-            bottom_density = values["Bottom Density"]
-            bottom_attenuation = values["Bottom Attenuation"]
-            num_source_depths = int(values["Number of Source Depths"])
-            source_depths = np.array([float(x) for x in self.fields["Source Depths"].text().split(",")])
-            num_receiver_depths = int(values["Number of Receiver Depths"])
-            receiver_depths = np.array([float(x) for x in self.fields["Receiver Depths"].text().split(",")])
-            num_receiver_ranges = int(values["Number of Receiver Ranges"])
-            receiver_ranges = np.array([float(x) for x in self.fields["Receiver Ranges"].text().split(",")])
-            ray_compute_type = np.array(self.fields["Ray Compute Type"].currentText().split(":")[0].strip())
-            num_beams = int(values["Number of Beams"])
-            launch_angles = np.array([float(x) for x in self.fields["Launch Angles"].text().split(",")])
-            step_size = int(float(values["Step Size"]))
-
-            # SSP
-            ssp_data = io.loadmat(ssp_file)
-            ssp = np.squeeze(np.array(ssp_data["ssp"], dtype=np.float64), axis=0)
-            ssp_depths = np.squeeze(np.array(ssp_data["ssp_depths"], dtype=np.float64), axis=0)
-        
-            # BTY
-            bty_data = io.loadmat(bathy_file)
-            bath_map = np.array(bty_data["bath_map"], dtype=np.float64)
-            lon_range = np.squeeze(np.array(bty_data["lon_range"], dtype=np.float64), axis=0)
-            lat_range = np.squeeze(np.array(bty_data["lat_range"], dtype=np.float64), axis=0)
-
-            if  lon_start >= min(lon_range) and lon_start <= max(lon_range) and lat_start >= min(lat_range) and lat_start <= max(lat_range) and lon_end >= min(lon_range) and lon_end <= max(lon_range) and lat_end >= min(lat_range) and lat_end <= max(lat_range):
-                bath_depths, bath_ranges = map_1D(bath_map=bath_map, 
-                                                lon_range=lon_range, 
-                                                lat_range=lat_range, 
-                                                lon_start=lon_start, 
-                                                lon_end=lon_end, 
-                                                lat_start=lat_start, 
-                                                lat_end=lat_end,
-                                                num_points=200)
-            else:
-                QMessageBox.critical(self, "Error", "Source and receiver coordinates are outside the bathymetry range. Please check your inputs.")
-                return
-
-            # ATI
-            ati_data = io.loadmat(ati_file)
-            ati_depths = np.squeeze(np.array(ati_data["ati"], dtype=np.float64), axis=0)
-
-            # Fix ray_compute
-            ray_compute_type = np.append(ray_compute_type, ['', '', '', ''])
-
-            if ray_compute_type[0] == 'E' or ray_compute_type[0] == 'R':
-                ray_shot = Write_RAY(dir=data_dir, 
-                                    filename=filename, 
-                                    ssp_depths=ssp_depths,
-                                    ssp=ssp,
-                                    bath_ranges=bath_ranges,
-                                    bath_depths=bath_depths,
-                                    ati_depths=ati_depths,
-                                    freq=freq,
-                                    nmedia=1,
-                                    sspopt=[sspopt1, 
-                                            sspopt2, 
-                                            sspopt3, 
-                                            sspopt4, 
-                                            sspopt5],
-                                    surface_opt=[min(ati_depths),
-                                                float(surface_compressional_speed),
-                                                float(surface_shear_speed),
-                                                float(surface_density),
-                                                float(surface_attenuation)],
-                                    bottom_type=[bottom_type,
-                                                include_bathymetry],
-                                    roughness=roughness,
-                                    bottom_opt=[max(bath_depths),
-                                                float(bottom_compressional_speed),
-                                                float(bottom_shear_speed),
-                                                float(bottom_density),
-                                                float(bottom_attenuation)],
-                                    nsd=num_source_depths,
-                                    sd=source_depths,
-                                    nrd=num_receiver_depths,
-                                    rd=receiver_depths,
-                                    nrr=num_receiver_ranges, 
-                                    rr=receiver_ranges,
-                                    ray_compute=ray_compute_type,
-                                    num_beams=num_beams,
-                                    launch_angles=launch_angles,
-                                    step_size=step_size,
-                                    max_depth=max(bath_depths)+1,
-                                    max_range=max(bath_ranges)+1,
-                                    opt4=None,
-                                    pair='L')
-                
-                self.close()
-                # Write the .env, .bty, and .ati files
-                ray_shot.write_files()
-                
-                # Run Bellhop
-                os.system(bellhop_executable + " -2D " + data_dir + filename)
-
-                # Plot the results
-                ray_shot_plot = Read_RAY(directory=data_dir, 
-                                        output_directory = save_dir,
-                                        ray_file=filename, 
-                                        ray_compute_type=ray_compute_type[0],
-                                        ssp_depths=ssp_depths, 
-                                        ssp=ssp,
-                                        bath_ranges=bath_ranges, 
-                                        bath_depths=bath_depths, 
-                                        ati_depths=ati_depths, 
-                                        s_depth=source_depths, 
-                                        r_depth=receiver_depths, 
-                                        r_range=receiver_ranges,
-                                        precision=1,
-                                        bottom_opt=[max(bath_depths),
-                                                    float(bottom_compressional_speed),
-                                                    float(bottom_shear_speed),
-                                                    float(bottom_density),
-                                                    float(bottom_attenuation)],
-                                        surface_opt=[min(ati_depths),
-                                                    float(surface_compressional_speed),
-                                                    float(surface_shear_speed),
-                                                    float(surface_density),
-                                                    float(surface_attenuation)])
-                    
-                ray_shot_plot.plot_ray_profile()
-                plt.show()
-            
-            elif ray_compute_type[0] == 'C':
-                tl_shot = Write_TL(dir=data_dir, 
-                                filename=filename, 
-                                ssp_depths=ssp_depths,
-                                ssp=ssp,
-                                bath_ranges=bath_ranges,
-                                bath_depths=bath_depths,
-                                ati_depths=ati_depths,
-                                freq=freq,
-                                nmedia=1,
-                                sspopt=[sspopt1, 
-                                        sspopt2, 
-                                        sspopt3, 
-                                        sspopt4, 
-                                        sspopt5],
-                                surface_opt=[min(ati_depths),
-                                                float(surface_compressional_speed),
-                                                float(surface_shear_speed),
-                                                float(surface_density),
-                                                float(surface_attenuation)],
-                                bottom_type=[bottom_type,
-                                                include_bathymetry],
-                                roughness=roughness,
-                                bottom_opt=[max(bath_depths),
-                                                float(bottom_compressional_speed),
-                                                float(bottom_shear_speed),
-                                                float(bottom_density),
-                                                float(bottom_attenuation)],
-                                nsd=num_source_depths,
-                                sd=source_depths,
-                                nrd=num_receiver_depths,
-                                rd=receiver_depths,
-                                nrr=num_receiver_ranges, 
-                                rr=receiver_ranges,
-                                ray_compute=ray_compute_type,
-                                num_beams=num_beams,
-                                launch_angles=launch_angles,
-                                step_size=step_size,
-                                max_depth=max(bath_depths)+1,
-                                max_range=max(bath_ranges)+1,
-                                opt4=None,
-                                pair='L')
-                
-                self.close()
-                # Write the .env, .bty, and .ati files
-                tl_shot.write_files()
-                
-                # Run Bellhop
-                os.system(bellhop_executable + " -2D " + data_dir + filename)
-
-                # Plot the results
-                tl_shot_plot = Read_TL(directory=data_dir, 
-                                       output_directory = save_dir,
-                                       tl_file=filename, 
-                                       freqs=[int(float(freq))],
-                                       bath_ranges=bath_ranges)
-                    
-                pressure = tl_shot_plot.read_shd(freq=int(float(freq)))
-                tl_shot_plot.plot_tl(pressure)
-                plt.show()
-        except:
-            QMessageBox.critical(self, "Error", "An error occurred while running the simulation. Please check your inputs and try again.")
-
+    
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
