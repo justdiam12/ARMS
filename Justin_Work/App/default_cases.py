@@ -88,7 +88,7 @@ def set_default_options(self):
             self.fields["Launch Angles"].setText("-25.0, 25.0")
             self.fields["Step Size"].setText("10.0")
             
-        elif default_option == "Transmission Loss":
+        elif default_option == "Coherent Transmission Loss":
             self.fields["Bellhop Executable"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bellhop_exe/bellhopcxx"))
             self.fields["SSP File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/ssp.mat"))
             self.fields["Bathymetry File"].setText(os.path.join(os.getcwd(), "Justin_Work/App/bty_ssp_ati/bty.mat"))
