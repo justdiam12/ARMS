@@ -6,7 +6,7 @@ from matplotlib import gridspec
 import scipy.io as io
 
 # This function creates a 2D Map of Dabob Bathymetry (returns the 2D map as np.array, lon_range, and lat_range)
-def map_2D(directory="/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/Collected_Dabob_Bathymetry_combined.xlsx"):
+def map_2D(directory):
     # Get Bathymetry Data
     data = pd.read_excel(directory, engine='openpyxl')
     data = data.to_numpy()
@@ -124,32 +124,15 @@ def plot_all(bath_map, lon_range, lat_range, profile, distances, lon_start, lon_
 
     fig.tight_layout()
 
-    if save_dir:
-        plt.savefig(save_dir, bbox_inches='tight', dpi=300)
-        io.savemat('/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/track_info.mat', 
-                    {'bath_map': bath_map,
-                    'lon_range': lon_range, 
-                    'lat_range': lat_range, 
-                    'profile': profile, 
-                    'distances': distances, 
-                    'lon_start': lon_start, 
-                    'lon_end': lon_end, 
-                    'lat_start': lat_start, 
-                    'lat_end': lat_end}) 
-    else:
-        plt.show()
-
-# Latitude and Longitude inputs for the 1D trackline
-lon_start=-122.83
-lon_end=-122.85
-lat_start=47.77
-lat_end=47.71
-
-save_dir = "/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Output/dabob_bath.png"
-
-# Create the map
-# dabob_map, lon_range, lat_range = map_2D(directory="/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/Collected_Dabob_Bathymetry_combined.xlsx")
-# plot_2D_bathy(dabob_map, lon_range, lat_range, save_dir="/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Ouput/dabob_bath.png")
-# profile, distances = map_1D(bath_map=dabob_map, lon_range=lon_range, lat_range=lat_range, lon_start=lon_start, lon_end=lon_end, lat_start=lat_start, lat_end=lat_end, num_points=200)
-# plot_1D_bathy(profile, distances)
-# plot_all(dabob_map, lon_range, lat_range, profile, distances, lon_start=lon_start, lon_end=lon_end, lat_start=lat_start, lat_end=lat_end, save_dir=None)
+    plt.savefig(save_dir + ".png", bbox_inches='tight', dpi=300)
+    io.savemat(save_dir + ".mat", 
+                {'bath_map': bath_map,
+                'lon_range': lon_range, 
+                'lat_range': lat_range, 
+                'profile': profile, 
+                'distances': distances, 
+                'lon_start': lon_start, 
+                'lon_end': lon_end, 
+                'lat_start': lat_start, 
+                'lat_end': lat_end}) 
+    plt.show()

@@ -43,7 +43,6 @@ class TLViewerApp(QWidget):
             "Altimetry File": QLineEdit(),
             "Filename": QLineEdit(),
             "Data File Directory": QLineEdit(),
-            "Save File Directory": QLineEdit(),
             "Source Longitude": QLineEdit(),
             "Source Latitude": QLineEdit(),
             "Receiver Longitude": QLineEdit(),
@@ -137,15 +136,6 @@ class TLViewerApp(QWidget):
                 df_layout.addWidget(line_edit, 0, 1)
                 df_layout.addWidget(df_browse, 0, 2)
                 self.layout.addLayout(df_layout, j, 2 * line, 1, 2)
-            elif label_text == "Save File Directory":
-                sf_browse = QPushButton("Browse")
-                sf_browse.clicked.connect(self.browse_sf_dir)
-                sf_layout = QGridLayout()
-                label = QLabel(label_text)
-                sf_layout.addWidget(label, 0, 0)
-                sf_layout.addWidget(line_edit, 0, 1)
-                sf_layout.addWidget(sf_browse, 0, 2)
-                self.layout.addLayout(sf_layout, j, 2 * line, 1, 2)
             elif label_text == "Source Longitude":
                 slong_layout = QGridLayout()
                 label = QLabel(label_text)
@@ -416,8 +406,8 @@ class TLViewerApp(QWidget):
         run_layout = QGridLayout()
         self.run_type_dropdown = QComboBox()
         self.run_type_dropdown.addItems([
-            "Plot Bathymetry",
-            "Run Bellhop"
+            "Run Bellhop",
+            "Plot Bathymetry"
         ])
         run_button = QPushButton("Run")
         run_layout.addWidget(run_label, 0, 0)
@@ -458,17 +448,12 @@ class TLViewerApp(QWidget):
             self.fields["Data File Directory"].setText(directory)
 
 
-    def browse_sf_dir(self):
-        directory = QFileDialog.getExistingDirectory(self, "Select Save File Directory")
-        if directory:
-            self.fields["Save File Directory"].setText(directory)
-
     def select_run_type(self):
         run_option = self.run_type_dropdown.currentText()
-        if run_option == "Plot Bathymetry":
-            self.plot_bathy()
-        elif run_option == "Run Bellhop":
+        if run_option == "Run Bellhop":
             self.run_bellhop()
+        elif run_option == "Plot Bathymetry":
+            self.plot_bathy()
     
 
 if __name__ == "__main__":

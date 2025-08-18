@@ -68,10 +68,6 @@ class Write_RAY:
         if len(self.ssp_depth) != len(self.ssp):
             raise ValueError("Depths and speeds must have the same length.")
 
-        max_depth = max(np.max(self.ssp_depth), np.max(self.bath_depths))
-        min_depth = min(np.min(self.ssp_depth), np.min(self.bath_depths))
-        max_range = np.max(self.bath_ranges)
-
         with open(env_path, 'w') as f:
             f.write(f"'{self.filename}'\t\t\t! TITLE\n")
             f.write(f"{self.freq}\t\t\t! FREQ (Hz)\n")
@@ -172,7 +168,6 @@ class Write_RAY:
 class Read_RAY:
     def __init__(self, 
                  directory=None, 
-                 output_directory=None,
                  ray_file=None,
                  ray_compute_type=None, 
                  ssp_depths=None, 
@@ -187,8 +182,7 @@ class Read_RAY:
                  bottom_opt=None,
                  surface_opt=None):
         
-        self.dir = directory
-        self.output_directory = output_directory
+        self.directory = directory
         self.ray_file = ray_file
         self.ray_compute_type = ray_compute_type
         self.ssp_depths = ssp_depths
@@ -196,7 +190,7 @@ class Read_RAY:
         self.bath_ranges = bath_ranges
         self.bath_depths = bath_depths
         self.ati_depths = ati_depths
-        self.ray_file_path = self.dir + self.ray_file + ".ray"
+        self.ray_file_path = os.path.join(self.directory, self.ray_file + ".ray")
         self.s_depth = s_depth
         self.r_depth = r_depth
         self.r_range = r_range
@@ -232,7 +226,7 @@ class Read_RAY:
                 r, z = map(float, l.strip().split())
                 ray.append((r, z))
                 line = line + 1
-            if self.ray_compute_type == "E" or self.ray_compute_type == 'E':
+            if self.ray_compute_type == "E":
                 in_precision = 0
                 for i in range(len(self.r_depth)):
                     if np.abs(ray[-1][1]-self.r_depth[i]) <= self.precision and np.abs(ray[-1][0]-self.r_range[0]*1000) <= self.precision:
@@ -241,8 +235,9 @@ class Read_RAY:
                         continue
                 if in_precision == 1:
                     ray_data.append(ray)
-            elif self.ray_compute_type == "R" or self.ray_compute_type == 'R':
-                ray_data.append(ray)
+            elif self.ray_compute_type == "R":
+                if np.abs(ray[0][0] - 0) <= self.precision and np.abs(ray[-1][0] - self.r_range[0]*1000) <= self.precision:
+                    ray_data.append(ray)
 
         return ray_data, alpha_data
 
@@ -260,7 +255,7 @@ class Read_RAY:
                 r.append(index[0] / 1000)
                 z.append(index[1])
 
-            # Plot ray
+            #plot the rays
             axs[0].plot(r,z)
 
         axs[0].invert_yaxis()
@@ -272,12 +267,14 @@ class Read_RAY:
         axs[0].plot(self.bath_ranges, self.bath_depths, color="black", linewidth=3)
         axs[0].set_xlabel("Range (km)")
         axs[0].set_ylabel("Depth (m)")
-        axs[0].set_title("Eigenrays")
-
+        if self.ray_compute_type == "E":
+            axs[0].set_title("Eigenray Coordinates")
+        elif self.ray_compute_type == "R":
+            axs[0].set_title("Ray Coordinates")
         axs[1].plot(self.ssp, self.ssp_depths)
         axs[1].set_title("Sound Speed Profile")
         axs[1].set_xlabel("Sound Speed (m/s)")
-        plt.savefig(self.output_directory + self.ray_file + ".png", dpi=300, bbox_inches='tight')
+        plt.savefig(os.path.join(self.directory, self.ray_file + ".png"), dpi=300, bbox_inches='tight')
         plt.tight_layout()
                                 
             
