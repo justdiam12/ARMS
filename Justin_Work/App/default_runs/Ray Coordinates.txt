@@ -1,0 +1,39 @@
+Bellhop Executable ~ Justin_Work/App/bellhop_exe/bellhopcxx
+SSP File ~ Justin_Work/App/bty_ssp_ati/ssp.mat
+Bathymetry File ~ Justin_Work/App/bty_ssp_ati/bty.mat
+Altimetry File ~ Justin_Work/App/bty_ssp_ati/ati.mat
+Data File Directory ~ Justin_Work/App/Runs
+Filename ~ run_rays_3500
+Source Longitude ~ -122.83
+Source Latitude ~ 47.77
+Receiver Longitude ~ -122.85
+Receiver Latitude ~ 47.71
+Frequency ~ 3500.0
+SSPOPT(1) ~ S: Cubic Spline Interpolation
+SSPOPT(2) ~ A: Acoustic half-space (Surface information required)
+SSPOPT(3) ~ F: attenuation corresponds to (dB/m)kHz
+SSPOPT(4) ~ ' ': Default parameter
+SSPOPT(5) ~ *: Use if including an *.ati file for surface shape
+Surface Height ~ 0.0 
+Surface Compressional Speed ~ 343.0
+Surface Shear Speed ~ 0.0
+Surface Density ~ 1.2
+Surface Attenuation ~ 0.0
+Bottom Type ~ A: acoustic half-space below water column (need BOTTOM-LINE)
+Include Bathymetry ~ *: include if wanting to use a *.bty file
+Roughness ~ 0.0
+Bottom Height ~ 0.0
+Bottom Compressional Speed ~ 1600.0
+Bottom Shear Speed ~ 0.0
+Bottom Density ~ 1.8
+Bottom Attenuation ~ 0.0
+Number of Source Depths ~ 1
+Source Depths ~ 20.0
+Number of Receiver Depths ~ 1
+Receiver Depths ~ 20.0
+Number of Receiver Ranges ~ 1
+Receiver Ranges ~ 7.0
+Ray Compute Type ~ R: Write ray coordinates
+Number of Beams ~ 10001
+Launch Angles ~ -25.0, 25.0
+Step Size ~ 10.0
