@@ -1,12 +1,13 @@
 import os
 import numpy as np
 from PyQt5.QtWidgets import QMessageBox, QLineEdit, QComboBox
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+# Personal files
 from Justin_Work.ray import Write_RAY, Read_RAY
 from Justin_Work.tl import Write_TL, Read_TL
 from Justin_Work.bathymetry import *
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 
 
 def plot_bathy(self):

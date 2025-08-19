@@ -3,9 +3,6 @@ import matplotlib.pyplot as plt
 import os
 import sys
 from struct import unpack
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-sys.path.append(root_dir)
-# from pyat.pyat.readwrite import *
 import matplotlib.animation as animation
 
 class Write_TL:
@@ -176,12 +173,18 @@ class Read_TL:
                  directory=None, 
                  tl_file=None,
                  freqs=None,
-                 bath_ranges=None):
+                 bath_depths=None,
+                 bath_ranges=None,
+                 ati_depths=None,
+                 ati_ranges=None):
         
         self.directory = directory
         self.tl_file = tl_file
         self.freqs = freqs
+        self.bath_depths = bath_depths
         self.bath_ranges = bath_ranges
+        self.ati_depths = ati_depths
+        self.ati_ranges = ati_ranges
     
 
     def read_shd_main(self, freq):
@@ -189,6 +192,104 @@ class Read_TL:
         filename = os.path.join(self.directory, self.tl_file + ".shd")
         _, _, _, _, _, pressure = self.read_shd(filename, freq)
         return pressure
+    
+
+    def plot_frame(self, ax, pressure, freq):
+        ax.clear()
+        pressure = abs(pressure)
+        pressure = 10 * np.log10(pressure / np.max(pressure))
+        levs = np.linspace(-30, 0, 31)
+
+        im = ax.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
+        ax.invert_yaxis()
+
+        ax.set_title(f"{self.tl_file}, Frequency: {freq/1000:.1f} kHz")
+        ax.set_xlabel("Range (km)")
+        ax.set_ylabel("Depth (m)")
+
+        # Tick labeling
+        n_range_pts = pressure.shape[-1]
+        interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
+        tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
+        tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
+        ax.set_xticks(tick_locs)
+        ax.set_xticklabels(tick_labels)
+
+        return im
+
+
+    def tl_animate(self):
+        fig, ax = plt.subplots(figsize=(12, 8))
+        cbar_ax = fig.add_axes([0.91, 0.15, 0.02, 0.7])  # position of colorbar
+        contour = [None]  # to store the contour handle for colorbar
+
+        def update(frame_idx):
+            ax.clear()
+            freq = self.freqs[frame_idx]
+            pressure = self.read_shd(freq)
+
+            pressure = abs(pressure)
+            pressure = 10 * np.log10(pressure / np.max(pressure))
+            levs = np.linspace(-30, 0, 31)
+
+            cs = ax.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
+            ax.invert_yaxis()
+            ax.set_title(f"{self.tl_file}, Frequency: {freq/1000:.1f} kHz")
+            ax.set_xlabel("Range (km)")
+            ax.set_ylabel("Depth (m)")
+
+            # Set x-ticks
+            n_range_pts = pressure.shape[-1]
+            interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
+            tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
+            tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
+            ax.set_xticks(tick_locs)
+            ax.set_xticklabels(tick_labels)
+
+            # Update colorbar
+            cbar_ax.clear()
+            fig.colorbar(cs, cax=cbar_ax, label="Relative TL (dB)")
+
+            return cs.collections
+
+        anim = animation.FuncAnimation(
+            fig, update,
+            frames=len(self.freqs),
+            blit=False,
+            repeat=False
+        )
+
+        output_path = f"{self.directory}{self.tl_file}_sweep.mp4"
+        anim.save(output_path, writer='ffmpeg', fps=5)
+        print(f"Saved animation to {output_path}")
+
+
+    def plot_tl(self, pressure):
+        pressure = abs(pressure)
+        pressure = 10 * np.log10(pressure / np.max(pressure))
+        levs = np.linspace(-30, 0, 31)
+
+        plt.figure(figsize=(12, 8))
+        plt.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
+        plt.colorbar(label="Relative TL (dB)")
+        plt.gca().set_aspect('auto')
+        plt.tight_layout()
+        plt.gca().invert_yaxis()
+
+        plt.title(f"{self.tl_file}, Frequency: {self.freqs[0]/1000:.1f} kHz")
+        plt.xlabel("Range (km)")
+        plt.ylabel("Depth (m)")
+
+        # Tick labeling
+        ax = plt.gca()
+        n_range_pts = pressure.shape[-1]
+        interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
+        tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
+        tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
+        ax.set_xticks(tick_locs)
+        ax.set_xticklabels(tick_labels)
+        plt.savefig(os.path.join(self.directory, self.tl_file + ".png"), dpi=300)
+        plt.show()
     
 
     def fileparts(self, fname):
@@ -439,103 +540,6 @@ class Read_TL:
         # nchars = strfind( PlotTitle, '''' );   # find quotes
         # PlotTitle = [ PlotTitle( nchars( 1 ) + 1 : nchars( 2 ) - 1 ) ]
         return [ PlotTitle, PlotType, freqVec, atten, pos, pressure ] 
-
-
-    def plot_frame(self, ax, pressure, freq):
-        ax.clear()
-        pressure = abs(pressure)
-        pressure = 10 * np.log10(pressure / np.max(pressure))
-        levs = np.linspace(-30, 0, 31)
-
-        im = ax.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
-        ax.invert_yaxis()
-
-        ax.set_title(f"{self.tl_file}, Frequency: {freq/1000:.1f} kHz")
-        ax.set_xlabel("Range (km)")
-        ax.set_ylabel("Depth (m)")
-
-        # Tick labeling
-        n_range_pts = pressure.shape[-1]
-        interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
-        tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
-        tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
-        ax.set_xticks(tick_locs)
-        ax.set_xticklabels(tick_labels)
-
-        return im
-
-
-    def tl_animate(self):
-        fig, ax = plt.subplots(figsize=(12, 8))
-        cbar_ax = fig.add_axes([0.91, 0.15, 0.02, 0.7])  # position of colorbar
-        contour = [None]  # to store the contour handle for colorbar
-
-        def update(frame_idx):
-            ax.clear()
-            freq = self.freqs[frame_idx]
-            pressure = self.read_shd(freq)
-
-            pressure = abs(pressure)
-            pressure = 10 * np.log10(pressure / np.max(pressure))
-            levs = np.linspace(-30, 0, 31)
-
-            cs = ax.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
-            ax.invert_yaxis()
-            ax.set_title(f"{self.tl_file}, Frequency: {freq/1000:.1f} kHz")
-            ax.set_xlabel("Range (km)")
-            ax.set_ylabel("Depth (m)")
-
-            # Set x-ticks
-            n_range_pts = pressure.shape[-1]
-            interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
-            tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
-            tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
-            ax.set_xticks(tick_locs)
-            ax.set_xticklabels(tick_labels)
-
-            # Update colorbar
-            cbar_ax.clear()
-            fig.colorbar(cs, cax=cbar_ax, label="Relative TL (dB)")
-
-            return cs.collections
-
-        anim = animation.FuncAnimation(
-            fig, update,
-            frames=len(self.freqs),
-            blit=False,
-            repeat=False
-        )
-
-        output_path = f"{self.directory}{self.tl_file}_sweep.mp4"
-        anim.save(output_path, writer='ffmpeg', fps=5)
-        print(f"Saved animation to {output_path}")
-
-    def plot_tl(self, pressure):
-        pressure = abs(pressure)
-        pressure = 10 * np.log10(pressure / np.max(pressure))
-        levs = np.linspace(-30, 0, 31)
-
-        plt.figure(figsize=(12, 8))
-        plt.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
-        plt.colorbar(label="Relative TL (dB)")
-        plt.gca().set_aspect('auto')
-        plt.tight_layout()
-        plt.gca().invert_yaxis()
-
-        plt.title(f"{self.tl_file}, Frequency: {self.freqs[0]/1000:.1f} kHz")
-        plt.xlabel("Range (km)")
-        plt.ylabel("Depth (m)")
-
-        # Tick labeling
-        ax = plt.gca()
-        n_range_pts = pressure.shape[-1]
-        interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
-        tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
-        tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
-        ax.set_xticks(tick_locs)
-        ax.set_xticklabels(tick_labels)
-        plt.savefig(os.path.join(self.directory, self.tl_file + ".png"), dpi=300)
-        plt.show()
 
 
 class Source:
