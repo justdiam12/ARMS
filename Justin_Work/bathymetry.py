@@ -118,6 +118,7 @@ def plot_all(bath_map, lon_range, lat_range, profile, distances, lon_start, lon_
              color='red', linewidth=2, linestyle='--', label='Trackline')
 
     ax1.plot(distances, profile, linewidth=2)
+    ax1.invert_yaxis()
     ax1.set_title("Trackline Profile")
     ax1.set_xlabel("Distance (km)")
     ax1.set_ylabel("Depth (m)")

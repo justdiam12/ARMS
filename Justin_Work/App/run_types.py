@@ -358,9 +358,13 @@ def run_bellhop(self):
             tl_shot_plot = Read_TL(directory=data_dir, 
                                    tl_file=filename, 
                                    freqs=[int(float(freq))],
-                                   bath_ranges=bath_ranges)
+                                   bath_depths=bath_depths,
+                                   bath_ranges=bath_ranges,
+                                   ati_depths=ati_depths,
+                                   ati_ranges=bath_ranges)
                 
             pressure = tl_shot_plot.read_shd_main(freq=int(float(freq)))
+            pressure = np.squeeze(np.squeeze(pressure, axis=0), axis=0)
             tl_shot_plot.plot_tl(pressure)
             
     except Exception as e:
