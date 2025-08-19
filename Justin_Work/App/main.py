@@ -13,7 +13,7 @@ root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 
 sys.path.append(root_dir)
 
 from Justin_Work.App.caas import run_caas
-from Justin_Work.App.default_cases import set_default_options
+from Justin_Work.App.default_cases import get_default_options, set_default_options
 from Justin_Work.App.run_types import plot_bathy, run_bellhop
 
 # UI Class
@@ -27,6 +27,7 @@ class TLViewerApp(QWidget):
 
     # Import member functions
     run_caas = run_caas
+    get_default_options = get_default_options
     set_default_options = set_default_options
     plot_bathy = plot_bathy
     run_bellhop = run_bellhop
@@ -388,18 +389,15 @@ class TLViewerApp(QWidget):
         default_label = QLabel("Default Options:")
         default_layout = QGridLayout()
         self.default_dropdown = QComboBox()
-        self.default_dropdown.addItems([
-            "Eigenrays",
-            "Ray Coordinates",
-            "Coherent Transmission Loss"
-        ])
+        txt_files = [os.path.splitext(f)[0] for f in os.listdir(os.path.join(os.getcwd(), "Justin_Work", "App", "default_runs")) if f.endswith(".txt")]
+        self.default_dropdown.addItems(txt_files)
         default_button = QPushButton("Set Default")
         default_layout.addWidget(default_label, 0, 0)
         default_layout.addWidget(self.default_dropdown, 0, 1)
         default_layout.addWidget(default_button, 0, 2)
         default_layout.setColumnStretch(1, 1)
         self.layout.addLayout(default_layout, len(self.fields), 1, 1, 2)
-        default_button.clicked.connect(self.set_default_options)
+        default_button.clicked.connect(self.get_default_options)
 
         # Run Button
         run_label = QLabel("Run Type:")
