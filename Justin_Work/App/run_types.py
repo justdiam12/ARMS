@@ -3,7 +3,6 @@ import numpy as np
 from PyQt5.QtWidgets import QMessageBox, QLineEdit, QComboBox
 from Justin_Work.ray import Write_RAY, Read_RAY
 from Justin_Work.tl import Write_TL, Read_TL
-from pyat.pyat.readwrite import *
 from Justin_Work.bathymetry import *
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -145,6 +144,14 @@ def run_bellhop(self):
         else:
             QMessageBox.warning(self, "Warning", f"Directory {data_dir} already exists. Files may be overwritten.")
 
+        # Bellhop terminal command
+        if os.name == 'posix':
+            run_bh = f"{bellhop_executable} -2D {os.path.join(data_dir, filename)}"
+        elif os.name == 'nt':
+            run_bh = f"{bellhop_executable}.exe -2D {os.path.join(data_dir, filename)}"
+        else:
+            raise EnvironmentError("Unsupported operating system for Bellhop execution.")   
+
         if ray_compute_type[0] == 'E':
             ray_shot = Write_RAY(dir=data_dir, 
                                 filename=filename, 
@@ -192,7 +199,7 @@ def run_bellhop(self):
             ray_shot.write_files()
             
             # Run Bellhop
-            os.system(bellhop_executable + " -2D " + os.path.join(data_dir, filename))
+            os.system(run_bh)
 
             # Plot the results
             ray_shot_plot = Read_RAY(directory=data_dir, 
@@ -268,7 +275,7 @@ def run_bellhop(self):
             ray_shot.write_files()
             
             # Run Bellhop
-            os.system(bellhop_executable + " -2D " + os.path.join(data_dir, filename))
+            os.system(run_bh)
 
             # Plot the results
             ray_shot_plot = Read_RAY(directory=data_dir, 
@@ -344,7 +351,7 @@ def run_bellhop(self):
             tl_shot.write_files()
             
             # Run Bellhop
-            os.system(bellhop_executable + " -2D " + os.path.join(data_dir, filename))
+            os.system(run_bh)
 
             # Plot the results
             tl_shot_plot = Read_TL(directory=data_dir, 
@@ -352,7 +359,7 @@ def run_bellhop(self):
                                    freqs=[int(float(freq))],
                                    bath_ranges=bath_ranges)
                 
-            pressure = tl_shot_plot.read_shd(freq=int(float(freq)))
+            pressure = tl_shot_plot.read_shd_main(freq=int(float(freq)))
             tl_shot_plot.plot_tl(pressure)
             
     except Exception as e:

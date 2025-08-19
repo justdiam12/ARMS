@@ -3,13 +3,11 @@ from PyQt5.QtWidgets import QMessageBox
 
 def get_default_options(self):
     # Set default options based on the selected default
-    print("Working")
     default_option = self.default_dropdown.currentText()
 
     with open(os.path.join(os.getcwd(), "Justin_Work", "App", "default_runs", default_option + ".txt"), 'r') as f:
         lines = f.readlines()
         for line in lines:
-            print(line.strip())
             key, value = line.strip().split('~')
             key = key.strip()
             value = value.strip()
