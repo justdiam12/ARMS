@@ -269,27 +269,20 @@ class Read_TL:
         pressure = 10 * np.log10(pressure / np.max(pressure))
         levs = np.linspace(-30, 0, 31)
 
+        # This needs to be adjusted based on the shape of pressure
         n_depth_pts, n_range_pts = pressure.shape
-        # Construct range axis (km) and depth axis (m)
         ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
-        depths = np.linspace(0, np.max(self.bath_depths), n_depth_pts)
+        depths = np.linspace(0, 200, n_depth_pts)
 
         plt.figure(figsize=(12, 8))
         plt.contourf(ranges, depths, pressure, levels=levs, cmap='viridis')
-
-        # Interpolate bathymetry onto same range grid
         interpolated_bathy = np.interp(ranges, self.bath_ranges, self.bath_depths)
-
-        # Bathymetry line
         plt.plot(ranges, interpolated_bathy, 'black', linewidth=2, label='Bathymetry')
-
-        # Fill beneath bathymetry (to bottom of TL grid)
         plt.fill_between(
             ranges,
             interpolated_bathy,
             y2=depths[-1],   # bottom of plot
-            color="black"
-        )
+            color="black")
         plt.colorbar(label="Relative TL (dB)")
         plt.gca().set_aspect('auto')
         plt.tight_layout()
@@ -298,15 +291,6 @@ class Read_TL:
         plt.title(f"{self.tl_file}, Frequency: {self.freqs[0]/1000:.1f} kHz")
         plt.xlabel("Range (km)")
         plt.ylabel("Depth (m)")
-
-        # # Tick labeling
-        # ax = plt.gca()
-        # n_range_pts = pressure.shape[-1]
-        # interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
-        # tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
-        # tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
-        # ax.set_xticks(tick_locs)
-        # ax.set_xticklabels(tick_labels)
         plt.savefig(os.path.join(self.directory, self.tl_file + ".png"), dpi=300)
         plt.show()
     
