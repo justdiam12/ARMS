@@ -371,6 +371,130 @@ def run_bellhop(self):
             pressure = tl_shot_plot.read_shd_main(freq=int(float(freq)))
             pressure = np.squeeze(np.squeeze(pressure, axis=0), axis=0)
             tl_shot_plot.plot_tl(pressure)
+
+        elif ray_compute_type[0] == 'I':
+            tl_shot = Write_TL(dir=data_dir, 
+                               filename=filename, 
+                               ssp_depths=ssp_depths,
+                               ssp=ssp,
+                               bath_ranges=bath_ranges,
+                               bath_depths=bath_depths,
+                               ati_depths=ati_depths,
+                               freq=freq,
+                               nmedia=1,
+                               sspopt=[sspopt1, 
+                                       sspopt2, 
+                                       sspopt3, 
+                                       sspopt4, 
+                                       sspopt5],
+                               surface_opt=[min(ati_depths),
+                                            float(surface_compressional_speed),
+                                            float(surface_shear_speed),
+                                            float(surface_density),
+                                            float(surface_attenuation)],
+                               bottom_type=[bottom_type,
+                                            include_bathymetry],
+                               roughness=roughness,
+                               bottom_opt=[max(bath_depths),
+                                           float(bottom_compressional_speed),
+                                           float(bottom_shear_speed),
+                                           float(bottom_density),
+                                           float(bottom_attenuation)],
+                               nsd=num_source_depths,
+                               sd=source_depths,
+                               nrd=num_receiver_depths,
+                               rd=receiver_depths,
+                               nrr=num_receiver_ranges, 
+                               rr=receiver_ranges,
+                               ray_compute=ray_compute_type,
+                               num_beams=num_beams,
+                               launch_angles=launch_angles,
+                               step_size=step_size,
+                               max_depth=max(bath_depths)+1,
+                               max_range=max(bath_ranges)+1,
+                               opt4=None,
+                               pair='L')
+            
+            # Write the .env, .bty, and .ati files
+            tl_shot.write_files()
+            
+            # Run Bellhop
+            os.system(run_bh)
+
+            # Plot the results
+            tl_shot_plot = Read_TL(directory=data_dir, 
+                                   tl_file=filename, 
+                                   freqs=[int(float(freq))],
+                                   bath_depths=bath_depths,
+                                   bath_ranges=bath_ranges,
+                                   ati_depths=ati_depths,
+                                   ati_ranges=bath_ranges)
+                
+            pressure = tl_shot_plot.read_shd_main(freq=int(float(freq)))
+            pressure = np.squeeze(np.squeeze(pressure, axis=0), axis=0)
+            tl_shot_plot.plot_tl(pressure)
+
+        elif ray_compute_type[0] == 'S':
+            tl_shot = Write_TL(dir=data_dir, 
+                               filename=filename, 
+                               ssp_depths=ssp_depths,
+                               ssp=ssp,
+                               bath_ranges=bath_ranges,
+                               bath_depths=bath_depths,
+                               ati_depths=ati_depths,
+                               freq=freq,
+                               nmedia=1,
+                               sspopt=[sspopt1, 
+                                       sspopt2, 
+                                       sspopt3, 
+                                       sspopt4, 
+                                       sspopt5],
+                               surface_opt=[min(ati_depths),
+                                            float(surface_compressional_speed),
+                                            float(surface_shear_speed),
+                                            float(surface_density),
+                                            float(surface_attenuation)],
+                               bottom_type=[bottom_type,
+                                            include_bathymetry],
+                               roughness=roughness,
+                               bottom_opt=[max(bath_depths),
+                                           float(bottom_compressional_speed),
+                                           float(bottom_shear_speed),
+                                           float(bottom_density),
+                                           float(bottom_attenuation)],
+                               nsd=num_source_depths,
+                               sd=source_depths,
+                               nrd=num_receiver_depths,
+                               rd=receiver_depths,
+                               nrr=num_receiver_ranges, 
+                               rr=receiver_ranges,
+                               ray_compute=ray_compute_type,
+                               num_beams=num_beams,
+                               launch_angles=launch_angles,
+                               step_size=step_size,
+                               max_depth=max(bath_depths)+1,
+                               max_range=max(bath_ranges)+1,
+                               opt4=None,
+                               pair='L')
+            
+            # Write the .env, .bty, and .ati files
+            tl_shot.write_files()
+            
+            # Run Bellhop
+            os.system(run_bh)
+
+            # Plot the results
+            tl_shot_plot = Read_TL(directory=data_dir, 
+                                   tl_file=filename, 
+                                   freqs=[int(float(freq))],
+                                   bath_depths=bath_depths,
+                                   bath_ranges=bath_ranges,
+                                   ati_depths=ati_depths,
+                                   ati_ranges=bath_ranges)
+                
+            pressure = tl_shot_plot.read_shd_main(freq=int(float(freq)))
+            pressure = np.squeeze(np.squeeze(pressure, axis=0), axis=0)
+            tl_shot_plot.plot_tl(pressure)
             
     # except Exception as e:
     #     QMessageBox.critical(self, "Error", f"{e}")

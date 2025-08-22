@@ -1,8 +1,4 @@
-'run_tl_3500'			! TITLE
-3500.0			! FREQ (Hz)
-1			! NMEDIA
-'SVF *'			! SSPOPT
-323  -10.0  192.7			! DEPTH of bottom (m)
+'L'
 -10.0  1470.00  /
 0.1  1471.92  /
 0.4  1471.91  /
@@ -326,21 +322,3 @@
 190.2  1487.83  /
 191.5  1487.84  /
 192.7  1487.85  /
-
-'A*' 0.0			! BOTTOM TYPE, roughness
-187.7  1600.00  0.0  1.8  0.0 /			! Bottom depth, compressional speed, shear speed, density, and attenuation
-
-1			! NSD: Number of source depths
-20.0 /			! Source depth (m)
-
-201			! NRD: Number of receiver depths
-0.0 200.0 /			! Receiver depths (m)
-
-501			! NR: Number of ranges
-0.0 7.0 /			! Range values (km)
-
-'C'			! Option: 'R' for ray tracing, 'C' = coherent TL, 'I' = incoherent TL, 'S' = arrivals
-0 			! Number of beams
--89.0 89.0 /			! Launch angles (degrees)
-
-0.0 188.7 8.0			! Step size (m), Max depth (m), Max range (km)
