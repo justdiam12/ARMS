@@ -136,7 +136,7 @@ class TLViewerApp(QWidget):
                 label = QLabel(label_text)
                 df_layout.addWidget(label, 0, 0)
                 df_layout.addWidget(line_edit, 0, 1)
-                df_layout.addWidget(df_browse, 0, 2)
+                df_layout.add Widget(df_browse, 0, 2)
                 self.layout.addLayout(df_layout, j, 2 * line, 1, 2)
             elif label_text == "Source Longitude":
                 slong_layout = QGridLayout()

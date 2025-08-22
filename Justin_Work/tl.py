@@ -11,6 +11,7 @@ class Write_TL:
                  filename=None,              # Save Filename with no extension
                  ssp_depths=None,            # Numpy array of Sound Speed Profile Depths (Meters)
                  ssp=None,                   # Numpy array of Sound Speed Profile (same length as ssp_depths), (Meters/second)
+                 ssp_ranges=None,
                  bath_ranges=None,           # Numpy array of bathymetry range values (Kilometers)
                  bath_depths=None,           # Numpy array of bathymetry depths (same length as bath_ranges), (Meters)
                  ati_depths=None,
@@ -40,6 +41,7 @@ class Write_TL:
         self.filename = filename
         self.ssp_depth = ssp_depths
         self.ssp = ssp
+        self.ssp_ranges = ssp_ranges
         self.bath_ranges = bath_ranges
         self.bath_depths = bath_depths
         self.ati_depths = ati_depths

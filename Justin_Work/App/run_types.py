@@ -56,7 +56,7 @@ def plot_bathy(self):
 
 
 def run_bellhop(self):
-    try:
+    # try:
         # Read and convert input values
         values = {}
         for name, widget in self.fields.items():
@@ -109,8 +109,9 @@ def run_bellhop(self):
 
         # SSP
         ssp_data = io.loadmat(ssp_file)
-        ssp = np.squeeze(np.array(ssp_data["ssp"], dtype=np.float64), axis=0)
-        ssp_depths = np.squeeze(np.array(ssp_data["ssp_depths"], dtype=np.float64), axis=0)
+        ssp = np.array(ssp_data["ssp"], dtype=np.float64)
+        ssp_depths = np.array(ssp_data["ssp_depths"], dtype=np.float64)
+        ssp_ranges = np.array(ssp_data["ssp_ranges"], dtype=np.float64)
     
         # BTY
         bty_data = io.loadmat(bathy_file)
@@ -126,7 +127,7 @@ def run_bellhop(self):
                                             lon_end=lon_end, 
                                             lat_start=lat_start, 
                                             lat_end=lat_end,
-                                            num_points=200)
+                                            num_points=500)
         else:
             QMessageBox.critical(self, "Error", "Source and receiver coordinates are outside the bathymetry range. Please check your inputs.")
             return
@@ -158,6 +159,7 @@ def run_bellhop(self):
                                 filename=filename, 
                                 ssp_depths=ssp_depths,
                                 ssp=ssp,
+                                ssp_ranges=ssp_ranges,
                                 bath_ranges=bath_ranges,
                                 bath_depths=bath_depths,
                                 ati_depths=ati_depths,
@@ -208,6 +210,7 @@ def run_bellhop(self):
                                     ray_compute_type=ray_compute_type[0],
                                     ssp_depths=ssp_depths, 
                                     ssp=ssp,
+                                    ssp_ranges=ssp_ranges,
                                     bath_ranges=bath_ranges, 
                                     bath_depths=bath_depths, 
                                     ati_depths=ati_depths, 
@@ -234,6 +237,7 @@ def run_bellhop(self):
                                 filename=filename, 
                                 ssp_depths=ssp_depths,
                                 ssp=ssp,
+                                ssp_ranges=ssp_ranges,
                                 bath_ranges=bath_ranges,
                                 bath_depths=bath_depths,
                                 ati_depths=ati_depths,
@@ -284,6 +288,7 @@ def run_bellhop(self):
                                     ray_compute_type=ray_compute_type[0],
                                     ssp_depths=ssp_depths, 
                                     ssp=ssp,
+                                    ssp_ranges=ssp_ranges,
                                     bath_ranges=bath_ranges, 
                                     bath_depths=bath_depths, 
                                     ati_depths=ati_depths, 
@@ -367,5 +372,5 @@ def run_bellhop(self):
             pressure = np.squeeze(np.squeeze(pressure, axis=0), axis=0)
             tl_shot_plot.plot_tl(pressure)
             
-    except Exception as e:
-        QMessageBox.critical(self, "Error", f"{e}")
+    # except Exception as e:
+    #     QMessageBox.critical(self, "Error", f"{e}")

@@ -8,6 +8,7 @@ class Write_RAY:
                  filename=None,              # Save Filename with no extension
                  ssp_depths=None,            # Numpy array of Sound Speed Profile Depths (Meters)
                  ssp=None,                   # Numpy array of Sound Speed Profile (same length as ssp_depths), (Meters/second)
+                 ssp_ranges=None,
                  bath_ranges=None,           # Numpy array of bathymetry range values (Kilometers)
                  bath_depths=None,           # Numpy array of bathymetry depths (same length as bath_ranges), (Meters)
                  ati_depths=None,
@@ -37,6 +38,7 @@ class Write_RAY:
         self.filename = filename
         self.ssp_depth = ssp_depths
         self.ssp = ssp
+        self.ssp_ranges = ssp_ranges
         self.bath_ranges = bath_ranges
         self.bath_depths = bath_depths
         self.ati_depths = ati_depths
@@ -65,7 +67,7 @@ class Write_RAY:
 
     def write_env(self):
         env_path = os.path.join(self.dir, self.filename + ".env")
-        if len(self.ssp_depth) != len(self.ssp):
+        if self.ssp_depth.shape[1] != self.ssp.shape[1]:
             raise ValueError("Depths and speeds must have the same length.")
 
         with open(env_path, 'w') as f:
@@ -78,8 +80,11 @@ class Write_RAY:
                 f.write(f"'{self.sspopt[0]}{self.sspopt[1]}{self.sspopt[2]}{self.sspopt[3]}{self.sspopt[4]}'\t\t\t! SSPOPT\n")
             if self.sspopt[1] == "A":
                 f.write(f"{self.surface_opt[0]:.1f}  {self.surface_opt[1]:.2f}  {self.surface_opt[2]:.1f}  {self.surface_opt[3]:.1f}  {self.surface_opt[4]:.1f} /\t\t\t! Surface depth, compressional speed, shear speed, density, and attenuation\n")
-            f.write(f"{len(self.ssp_depth)}  {min(self.ssp_depth):.1f}  {max(self.ssp_depth):.1f}\t\t\t! DEPTH of bottom (m)\n")
-            for d, s in zip(self.ssp_depth, self.ssp):
+            if self.ssp.shape[0] == 1:
+                f.write(f"{self.ssp_depth.shape[1]}  {min(self.ssp_depth[0,:]):.1f}  {max(self.ssp_depth[0,:]):.1f}\t\t\t! DEPTH of bottom (m)\n")
+            else: 
+                f.write(f"{0}  {min(self.ssp_depth[0,:]):.1f}  {max(self.ssp_depth[0,:]):.1f}\t\t\t! DEPTH of bottom (m)\n")
+            for d, s in zip(self.ssp_depth[0,:], self.ssp[0,:]):
                 f.write(f"{d:.1f}  {s:.2f}  /\n")
             f.write("\n")
             if self.bottom_type[1] == "' '":
@@ -120,14 +125,29 @@ class Write_RAY:
 
     def write_ssp(self):
         ssp_path = os.path.join(self.dir, self.filename + ".ssp")
-        if len(self.ssp_depth) != len(self.ssp):
+        if self.ssp_depth.shape[1] != self.ssp.shape[1]:
             raise ValueError("Depths and speeds must have the same length.")
     
         with open(ssp_path, 'w') as f:
-            f.write(f"'{self.pair}'\n")
-            f.write(f"{len(self.ssp_depth)}\n")
-            for d, s in zip(self.ssp_depth, self.ssp):
-                f.write(f"{d:.2f}  {s:.2f}\n")
+            if self.ssp.shape[0] == 1:
+                f.write(f"'{self.pair}'\n")
+                for d, s in zip(self.ssp_depth[0,:], self.ssp[0,:]):
+                    f.write(f"{d:.1f}  {s:.2f}  /\n")
+            else:
+                f.write(f"{self.ssp.shape[1]}\n")
+                for i in range(self.ssp_depth.shape[1]):
+                    if i == self.ssp_depth.shape[1]-1:
+                        f.write(f"{self.ssp_depth[0,i]:0.1f}    \n")
+                    else:
+                        f.write(f"{self.ssp_depth[0,i]:0.1f}    ")
+                for i in range(self.ssp.shape[0]):
+                    for j in range(self.ssp.shape[1]):
+                        if j == self.ssp.shape[1]-1:
+                            f.write(f"{self.ssp[i,j]:0.2f} /\n")
+                        else:
+                            f.write(f"{self.ssp[i,j]:0.2f} ")
+                return
+
         print(f".ssp file written: {ssp_path}")
 
 
@@ -159,6 +179,7 @@ class Write_RAY:
 
     def write_files(self):
         self.write_env()
+        self.write_ssp()
         if self.bottom_type[1] == "*":
             self.write_bty()
         if self.sspopt[4] == "*":
@@ -171,7 +192,8 @@ class Read_RAY:
                  ray_file=None,
                  ray_compute_type=None, 
                  ssp_depths=None, 
-                 ssp=None, 
+                 ssp=None,
+                 ssp_ranges=None, 
                  bath_ranges=None, 
                  bath_depths=None, 
                  ati_depths=None,
@@ -187,6 +209,7 @@ class Read_RAY:
         self.ray_compute_type = ray_compute_type
         self.ssp_depths = ssp_depths
         self.ssp = ssp
+        self.ssp_ranges = ssp_ranges
         self.bath_ranges = bath_ranges
         self.bath_depths = bath_depths
         self.ati_depths = ati_depths
@@ -271,7 +294,8 @@ class Read_RAY:
             axs[0].set_title("Eigenray Coordinates")
         elif self.ray_compute_type == "R":
             axs[0].set_title("Ray Coordinates")
-        axs[1].plot(self.ssp, self.ssp_depths)
+        for i in range(self.ssp.shape[0]):
+            axs[1].plot(self.ssp[i,:], self.ssp_depths[0,:])
         axs[1].set_title("Sound Speed Profile")
         axs[1].set_xlabel("Sound Speed (m/s)")
         plt.savefig(os.path.join(self.directory, self.ray_file + ".png"), dpi=300, bbox_inches='tight')
