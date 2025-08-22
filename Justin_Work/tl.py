@@ -4,6 +4,7 @@ import os
 import sys
 from struct import unpack
 import matplotlib.animation as animation
+import scipy.io as io
 
 class Write_TL:
     def __init__(self, 
@@ -180,6 +181,35 @@ class Write_TL:
         print(f".ati file written: {ati_path}")
 
 
+    def write_mat(self):
+        mat_path = os.path.join(self.dir, self.filename + "_env.mat")
+        io.savemat(mat_path, {"ssp_depths": self.ssp_depth,
+                              "ssp": self.ssp,
+                              "ssp_ranges": self.ssp_ranges,
+                              "bath_ranges": self.bath_ranges,
+                              "bath_depths": self.bath_depths,
+                              "ati_depths": self.ati_depths,
+                              "freq": self.freq,
+                              "nmedia": self.nmedia,
+                              "sspopt": self.sspopt,
+                              "surface_opt": self.surface_opt,
+                              "bottom_type": self.bottom_type,
+                              "roughness": self.roughness,
+                              "bottom_opt": self.bottom_opt,
+                              "nsd": self.nsd,
+                              "sd": self.sd,
+                              "nrd": self.nrd,
+                              "rd": self.rd,
+                              "nrr": self.nrr,
+                              "rr": self.rr,
+                              "ray_compute": self.ray_compute,
+                              "num_beams": self.num_beams,
+                              "launch_angles": self.launch_angles,
+                              "step_size": self.step_size,
+                              "max_depth": self.max_depth,
+                              "max_range": self.max_range})
+
+
     def write_files(self):
         self.write_env()
         self.write_ssp()
@@ -187,6 +217,7 @@ class Write_TL:
             self.write_bty()
         if self.sspopt[4] == "*":
             self.write_ati()
+        self.write_mat()
 
 
 class Read_TL:
@@ -206,87 +237,98 @@ class Read_TL:
         self.bath_ranges = bath_ranges
         self.ati_depths = ati_depths
         self.ati_ranges = ati_ranges
+        self.pressure = []
+
+
+    def write_mat(self):
+        mat_path = os.path.join(self.directory, self.tl_file + "_output.mat")
+        if self.pressure.size == 0:
+            self.read_shd_main()
+
+        io.savemat(mat_path, {"pressure": self.pressure})
     
 
-    def read_shd_main(self, freq):
+    def read_shd_main(self):
         # Assuming file naming changes with frequency, e.g., arms_1_tl_100.shd
         filename = os.path.join(self.directory, self.tl_file + ".shd")
-        _, _, _, _, _, pressure = self.read_shd(filename, freq)
-        return pressure
+        _, _, _, _, _, pressure = self.read_shd(filename, self.freqs[0])
+        self.pressure = np.squeeze(np.squeeze(pressure, axis=0), axis=0)
     
 
-    def plot_frame(self, ax, pressure, freq):
-        ax.clear()
-        pressure = abs(pressure)
-        pressure = 10 * np.log10(pressure / np.max(pressure))
-        levs = np.linspace(-30, 0, 31)
+    # def plot_frame(self, ax, pressure, freq):
+    #     ax.clear()
+    #     pressure = abs(pressure)
+    #     pressure = 10 * np.log10(pressure / np.max(pressure))
+    #     levs = np.linspace(-30, 0, 31)
 
-        im = ax.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
-        ax.invert_yaxis()
+    #     im = ax.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
+    #     ax.invert_yaxis()
 
-        ax.set_title(f"{self.tl_file}, Frequency: {freq/1000:.1f} kHz")
-        ax.set_xlabel("Range (km)")
-        ax.set_ylabel("Depth (m)")
+    #     ax.set_title(f"{self.tl_file}, Frequency: {freq/1000:.1f} kHz")
+    #     ax.set_xlabel("Range (km)")
+    #     ax.set_ylabel("Depth (m)")
 
-        # Tick labeling
-        n_range_pts = pressure.shape[-1]
-        interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
-        tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
-        tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
-        ax.set_xticks(tick_locs)
-        ax.set_xticklabels(tick_labels)
+    #     # Tick labeling
+    #     n_range_pts = pressure.shape[-1]
+    #     interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
+    #     tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
+    #     tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
+    #     ax.set_xticks(tick_locs)
+    #     ax.set_xticklabels(tick_labels)
 
-        return im
-
-
-    def tl_animate(self):
-        fig, ax = plt.subplots(figsize=(12, 8))
-        cbar_ax = fig.add_axes([0.91, 0.15, 0.02, 0.7])  # position of colorbar
-        contour = [None]  # to store the contour handle for colorbar
-
-        def update(frame_idx):
-            ax.clear()
-            freq = self.freqs[frame_idx]
-            pressure = self.read_shd(freq)
-
-            pressure = abs(pressure)
-            pressure = 10 * np.log10(pressure / np.max(pressure))
-            levs = np.linspace(-30, 0, 31)
-
-            cs = ax.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
-            ax.invert_yaxis()
-            ax.set_title(f"{self.tl_file}, Frequency: {freq/1000:.1f} kHz")
-            ax.set_xlabel("Range (km)")
-            ax.set_ylabel("Depth (m)")
-
-            # Set x-ticks
-            n_range_pts = pressure.shape[-1]
-            interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
-            tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
-            tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
-            ax.set_xticks(tick_locs)
-            ax.set_xticklabels(tick_labels)
-
-            # Update colorbar
-            cbar_ax.clear()
-            fig.colorbar(cs, cax=cbar_ax, label="Relative TL (dB)")
-
-            return cs.collections
-
-        anim = animation.FuncAnimation(
-            fig, update,
-            frames=len(self.freqs),
-            blit=False,
-            repeat=False
-        )
-
-        output_path = f"{self.directory}{self.tl_file}_sweep.mp4"
-        anim.save(output_path, writer='ffmpeg', fps=5)
-        print(f"Saved animation to {output_path}")
+    #     return im
 
 
-    def plot_tl(self, pressure):
-        pressure = abs(pressure)
+    # def tl_animate(self):
+    #     fig, ax = plt.subplots(figsize=(12, 8))
+    #     cbar_ax = fig.add_axes([0.91, 0.15, 0.02, 0.7])  # position of colorbar
+    #     contour = [None]  # to store the contour handle for colorbar
+
+    #     def update(frame_idx):
+    #         ax.clear()
+    #         freq = self.freqs[frame_idx]
+    #         pressure = self.read_shd(freq)
+
+    #         pressure = abs(pressure)
+    #         pressure = 10 * np.log10(pressure / np.max(pressure))
+    #         levs = np.linspace(-30, 0, 31)
+
+    #         cs = ax.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
+    #         ax.invert_yaxis()
+    #         ax.set_title(f"{self.tl_file}, Frequency: {freq/1000:.1f} kHz")
+    #         ax.set_xlabel("Range (km)")
+    #         ax.set_ylabel("Depth (m)")
+
+    #         # Set x-ticks
+    #         n_range_pts = pressure.shape[-1]
+    #         interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
+    #         tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
+    #         tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
+    #         ax.set_xticks(tick_locs)
+    #         ax.set_xticklabels(tick_labels)
+
+    #         # Update colorbar
+    #         cbar_ax.clear()
+    #         fig.colorbar(cs, cax=cbar_ax, label="Relative TL (dB)")
+
+    #         return cs.collections
+
+    #     anim = animation.FuncAnimation(
+    #         fig, update,
+    #         frames=len(self.freqs),
+    #         blit=False,
+    #         repeat=False
+    #     )
+
+    #     output_path = f"{self.directory}{self.tl_file}_sweep.mp4"
+    #     anim.save(output_path, writer='ffmpeg', fps=5)
+    #     print(f"Saved animation to {output_path}")
+
+
+    def plot_tl(self):
+        if self.pressure.size == 0:
+            self.read_shd_main()
+        pressure = abs(self.pressure)
         pressure = 10 * np.log10(pressure / np.max(pressure))
         levs = np.linspace(-30, 0, 31)
 
@@ -313,8 +355,7 @@ class Read_TL:
         plt.xlabel("Range (km)")
         plt.ylabel("Depth (m)")
         plt.savefig(os.path.join(self.directory, self.tl_file + ".png"), dpi=300)
-        plt.show()
-    
+
 
     def fileparts(self, fname):
         fpath = os.path.dirname(os.path.abspath(fname))

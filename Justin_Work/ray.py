@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import scipy.io as io
 
 class Write_RAY:
     def __init__(self, 
@@ -176,6 +177,35 @@ class Write_RAY:
                 f.write(f"{r:.2f}  {d:.1f} / \n")
         print(f".ati file written: {ati_path}")
 
+    
+    def write_mat(self):
+        mat_path = os.path.join(self.dir, self.filename + "_env.mat")
+        io.savemat(mat_path, {"ssp_depths": self.ssp_depth,
+                              "ssp": self.ssp,
+                              "ssp_ranges": self.ssp_ranges,
+                              "bath_ranges": self.bath_ranges,
+                              "bath_depths": self.bath_depths,
+                              "ati_depths": self.ati_depths,
+                              "freq": self.freq,
+                              "nmedia": self.nmedia,
+                              "sspopt": self.sspopt,
+                              "surface_opt": self.surface_opt,
+                              "bottom_type": self.bottom_type,
+                              "roughness": self.roughness,
+                              "bottom_opt": self.bottom_opt,
+                              "nsd": self.nsd,
+                              "sd": self.sd,
+                              "nrd": self.nrd,
+                              "rd": self.rd,
+                              "nrr": self.nrr,
+                              "rr": self.rr,
+                              "ray_compute": self.ray_compute,
+                              "num_beams": self.num_beams,
+                              "launch_angles": self.launch_angles,
+                              "step_size": self.step_size,
+                              "max_depth": self.max_depth,
+                              "max_range": self.max_range})
+
 
     def write_files(self):
         self.write_env()
@@ -184,6 +214,7 @@ class Write_RAY:
             self.write_bty()
         if self.sspopt[4] == "*":
             self.write_ati()
+        self.write_mat()
 
 
 class Read_RAY:
@@ -220,6 +251,22 @@ class Read_RAY:
         self.precision = precision
         self.bottom_opt = bottom_opt
         self.surface_opt = surface_opt
+        self.ray_data = []
+        self.alpha_data = []
+        
+    
+    def write_mat(self):
+        mat_path = os.path.join(self.directory, self.ray_file + "_output.mat")
+
+        if self.ray_data.size == 0 or self.alpha_data.size == 0:
+            rays, alphas = self.read_ray_file(self.ray_file_path)
+            self.ray_data = rays
+            self.alpha_data = alphas 
+
+        io.savemat(mat_path, {"precision": self.precision,
+                              "ray_data": self.ray_data,
+                              "alpha_data": self.alpha_data})
+        
 
     def read_ray_file(self, filepath):
     
@@ -262,11 +309,19 @@ class Read_RAY:
                 if np.abs(ray[0][0] - 0) <= self.precision and np.abs(ray[-1][0] - self.r_range[0]*1000) <= self.precision:
                     ray_data.append(ray)
 
+        self.ray_data = ray_data
+        self.alpha_data = alpha_data 
         return ray_data, alpha_data
 
 
     def plot_ray_profile(self):
-        rays, alphas = self.read_ray_file(self.ray_file_path)
+        if self.ray_data.size == 0 or self.alpha_data.size == 0:
+            rays, alphas = self.read_ray_file(self.ray_file_path)
+            self.ray_data = rays
+            self.alpha_data = alphas    
+        else:
+            rays = self.ray_data
+            alphas = self.alpha_data    
         fig, axs = plt.subplots(1, 2, figsize=(12, 6), sharey=True, gridspec_kw={'width_ratios': [3, 1]})
         
         for i in range(len(rays)):
