@@ -1,0 +1,5 @@
+Bathymetry File ~ Justin_Work/App/bty/bty.mat
+Source Longitude ~ -122.83
+Source Latitude ~ 47.77
+Receiver Longitude ~ -122.85
+Receiver Latitude ~ 47.71

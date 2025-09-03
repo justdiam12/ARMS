@@ -1,4 +1,5 @@
 import os
+import glob
 import numpy as np
 from PyQt5.QtWidgets import QMessageBox, QLineEdit, QComboBox
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -21,12 +22,15 @@ def plot_bathy(self):
             values[name] = None
     
     # Extract Bathymetry File and coordinates
-    bathy_file = self.fields["Bathymetry File"].text()
+    environmental_file = self.fields["Environmental Files Directory"].text()
     lon_start = np.float64(values["Source Longitude"])
     lat_start = np.float64(values["Source Latitude"])
     lon_end   = np.float64(values["Receiver Longitude"])
     lat_end   = np.float64(values["Receiver Latitude"])
-    bty_data = io.loadmat(bathy_file)
+    try:
+        bty_data = io.loadmat(os.path.join(environmental_file, "bty.mat"))
+    except:
+        QMessageBox.critical(self, "Error", "Could not load bty.mat from the specified Environmental Files Directory. Please check your input.")
     bath_map = np.array(bty_data["bath_map"], dtype=np.float64)
     lon_range = np.squeeze(np.array(bty_data["lon_range"], dtype=np.float64), axis=0)
     lat_range = np.squeeze(np.array(bty_data["lat_range"], dtype=np.float64), axis=0)
@@ -55,9 +59,13 @@ def plot_bathy(self):
             QMessageBox.critical(self, "Error", f"Failed to plot bathymetry: {e}")
 
 
+def plot_ssp(self):
+    return
+
+
 def run_bellhop(self):
-    # try:
-        # Read and convert input values
+    try:
+        # Read and convert input valuess
         values = {}
         for name, widget in self.fields.items():
             if isinstance(widget, QLineEdit):
@@ -68,9 +76,8 @@ def run_bellhop(self):
                 values[name] = None
 
         bellhop_executable = self.fields["Bellhop Executable"].text()
-        ssp_file = self.fields["SSP File"].text()
-        bathy_file = self.fields["Bathymetry File"].text()
-        ati_file = self.fields["Altimetry File"].text()
+        environmental_dir = self.fields["Environmental Files Directory"].text()
+        env_files = os.listdir(environmental_dir)
         filename = self.fields["Filename"].text()
         data_dir = self.fields["Data File Directory"].text() 
         lon_start = np.float64(values["Source Longitude"])
@@ -107,55 +114,230 @@ def run_bellhop(self):
         launch_angles = np.array([float(x) for x in self.fields["Launch Angles"].text().split(",")])
         step_size = int(float(values["Step Size"]))
 
-        # SSP
-        ssp_data = io.loadmat(ssp_file)
-        ssp = np.array(ssp_data["ssp"], dtype=np.float64)
-        ssp_depths = np.array(ssp_data["ssp_depths"], dtype=np.float64)
-        ssp_ranges = np.array(ssp_data["ssp_ranges"], dtype=np.float64)
-    
-        # BTY
-        bty_data = io.loadmat(bathy_file)
-        bath_map = np.array(bty_data["bath_map"], dtype=np.float64)
-        lon_range = np.squeeze(np.array(bty_data["lon_range"], dtype=np.float64), axis=0)
-        lat_range = np.squeeze(np.array(bty_data["lat_range"], dtype=np.float64), axis=0)
-
-        if  lon_start >= min(lon_range) and lon_start <= max(lon_range) and lat_start >= min(lat_range) and lat_start <= max(lat_range) and lon_end >= min(lon_range) and lon_end <= max(lon_range) and lat_end >= min(lat_range) and lat_end <= max(lat_range):
-            bath_depths, bath_ranges = map_1D(bath_map=bath_map, 
-                                            lon_range=lon_range, 
-                                            lat_range=lat_range, 
-                                            lon_start=lon_start, 
-                                            lon_end=lon_end, 
-                                            lat_start=lat_start, 
-                                            lat_end=lat_end,
-                                            num_points=500)
-        else:
-            QMessageBox.critical(self, "Error", "Source and receiver coordinates are outside the bathymetry range. Please check your inputs.")
-            return
-
-        # ATI
-        ati_data = io.loadmat(ati_file)
-        ati_depths = np.squeeze(np.array(ati_data["ati"], dtype=np.float64), axis=0)
-
         # Fix ray_compute
-        ray_compute_type = np.append(ray_compute_type, ['', '', '', ''])
+        ray_compute_type = np.append(ray_compute_type, ['', '', '', ''])        
 
         # Create new data directory
         data_dir = os.path.join(data_dir, f"{ray_compute_type[0]}_{freq}_{lon_start}_{lon_end}_{lat_start}_{lat_end}")
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
         else:
-            QMessageBox.warning(self, "Warning", f"Directory {data_dir} already exists. Files may be overwritten.")
+            QMessageBox.warning(self, "Warning", f"Directory {data_dir} already exists. Files may be overwritten.")   
+    
+        # Check directory input
+        if "bty.mat" in env_files and "ssp.mat" in env_files and "ati.mat" in env_files:
+            bathy_file = os.path.join(environmental_dir, "bty.mat")
+            ssp_file = os.path.join(environmental_dir, "ssp.mat")
+            ati_file = os.path.join(environmental_dir, "ati.mat")
 
-        # Bellhop terminal command
-        if os.name == 'posix':
-            run_bh = f"{bellhop_executable} -2D {os.path.join(data_dir, filename)}"
-        elif os.name == 'nt':
-            run_bh = f"{bellhop_executable}.exe -2D {os.path.join(data_dir, filename)}"
-        else:
-            raise EnvironmentError("Unsupported operating system for Bellhop execution.")   
+            # Adjust save directory for current run
+            curr_dir_name = data_dir.split(os.sep)[-1]
+            data_dir_curr = os.path.join(data_dir, curr_dir_name)
+            if not os.path.exists(data_dir_curr):
+                os.makedirs(data_dir_curr)
+            else:
+                QMessageBox.warning(self, "Warning", f"Directory {data_dir_curr} already exists. Files may be overwritten.")   
+        
+            # BTY
+            bty_data = io.loadmat(bathy_file)
+            bath_map = np.array(bty_data["bath_map"], dtype=np.float64)
+            lon_range = np.squeeze(np.array(bty_data["lon_range"], dtype=np.float64), axis=0)
+            lat_range = np.squeeze(np.array(bty_data["lat_range"], dtype=np.float64), axis=0)
 
-        if ray_compute_type[0] == 'E':
-            ray_shot = Write_RAY(dir=data_dir, 
+            if  lon_start >= min(lon_range) and lon_start <= max(lon_range) and lat_start >= min(lat_range) and lat_start <= max(lat_range) and lon_end >= min(lon_range) and lon_end <= max(lon_range) and lat_end >= min(lat_range) and lat_end <= max(lat_range):
+                bath_depths, bath_ranges = map_1D(bath_map=bath_map, 
+                                                lon_range=lon_range, 
+                                                lat_range=lat_range, 
+                                                lon_start=lon_start, 
+                                                lon_end=lon_end, 
+                                                lat_start=lat_start, 
+                                                lat_end=lat_end,
+                                                num_points=500)
+            else:
+                QMessageBox.critical(self, "Error", "Source and receiver coordinates are outside the bathymetry range. Please check your inputs.")
+                return
+
+            # ATI
+            ati_data = io.loadmat(ati_file)
+            ati_depths = np.squeeze(np.array(ati_data["ati"], dtype=np.float64), axis=0)
+
+            # SSP
+            ssp_data = io.loadmat(ssp_file)
+            ssp = np.array(ssp_data["ssp"], dtype=np.float64)
+            ssp_depths = np.array(ssp_data["ssp_depths"], dtype=np.float64)
+            ssp_ranges = np.array(ssp_data["ssp_ranges"], dtype=np.float64)
+            if ssp_ranges.shape[1] > 1:
+                sspopt1_curr = 'Q'
+            else:
+                sspopt1_curr = sspopt1
+
+            # Bellhop terminal command
+            if os.name == 'posix':
+                run_bh = f"{bellhop_executable} -2D {os.path.join(data_dir_curr, filename)}"
+            elif os.name == 'nt':
+                run_bh = f"{bellhop_executable}.exe -2D {os.path.join(data_dir_curr, filename)}"
+            else:
+                raise EnvironmentError("Unsupported operating system for Bellhop execution.")
+
+
+            if ray_compute_type[0] == 'E':
+                ray_shot = Write_RAY(dir=data_dir_curr, 
+                                    filename=filename, 
+                                    ssp_depths=ssp_depths,
+                                    ssp=ssp,
+                                    ssp_ranges=ssp_ranges,
+                                    bath_ranges=bath_ranges,
+                                    bath_depths=bath_depths,
+                                    ati_depths=ati_depths,
+                                    freq=freq,
+                                    nmedia=1,
+                                    sspopt=[sspopt1_curr, 
+                                            sspopt2, 
+                                            sspopt3, 
+                                            sspopt4, 
+                                            sspopt5],
+                                    surface_opt=[min(ati_depths),
+                                                float(surface_compressional_speed),
+                                                float(surface_shear_speed),
+                                                float(surface_density),
+                                                float(surface_attenuation)],
+                                    bottom_type=[bottom_type,
+                                                include_bathymetry],
+                                    roughness=roughness,
+                                    bottom_opt=[max(bath_depths),
+                                                float(bottom_compressional_speed),
+                                                float(bottom_shear_speed),
+                                                float(bottom_density),
+                                                float(bottom_attenuation)],
+                                    nsd=num_source_depths,
+                                    sd=source_depths,
+                                    nrd=num_receiver_depths,
+                                    rd=receiver_depths,
+                                    nrr=num_receiver_ranges, 
+                                    rr=receiver_ranges,
+                                    ray_compute=ray_compute_type,
+                                    num_beams=num_beams,
+                                    launch_angles=launch_angles,
+                                    step_size=step_size,
+                                    max_depth=max(bath_depths)+1,
+                                    max_range=max(bath_ranges)+1,
+                                    opt4=None,
+                                    pair='L')
+                
+                # Write the .env, ,ssp, .bty, .ati, .mat files
+                ray_shot.write_files()
+                
+                # Run Bellhop
+                os.system(run_bh)
+
+                # Plot the results
+                ray_shot_plot = Read_RAY(directory=data_dir_curr, 
+                                        ray_file=filename, 
+                                        ray_compute_type=ray_compute_type[0],
+                                        ssp_depths=ssp_depths, 
+                                        ssp=ssp,
+                                        ssp_ranges=ssp_ranges,
+                                        bath_ranges=bath_ranges, 
+                                        bath_depths=bath_depths, 
+                                        ati_depths=ati_depths, 
+                                        s_depth=source_depths, 
+                                        r_depth=receiver_depths, 
+                                        r_range=receiver_ranges,
+                                        precision=1,
+                                        bottom_opt=[max(bath_depths),
+                                                    float(bottom_compressional_speed),
+                                                    float(bottom_shear_speed),
+                                                    float(bottom_density),
+                                                    float(bottom_attenuation)],
+                                        surface_opt=[min(ati_depths),
+                                                    float(surface_compressional_speed),
+                                                    float(surface_shear_speed),
+                                                    float(surface_density),
+                                                    float(surface_attenuation)])
+                    
+                ray_shot_plot.write_mat()
+                ray_shot_plot.plot_ray_profile()
+            
+            elif ray_compute_type[0] == 'R':
+                ray_shot = Write_RAY(dir=data_dir_curr, 
+                                    filename=filename, 
+                                    ssp_depths=ssp_depths,
+                                    ssp=ssp,
+                                    ssp_ranges=ssp_ranges,
+                                    bath_ranges=bath_ranges,
+                                    bath_depths=bath_depths,
+                                    ati_depths=ati_depths,
+                                    freq=freq,
+                                    nmedia=1,
+                                    sspopt=[sspopt1_curr, 
+                                            sspopt2, 
+                                            sspopt3, 
+                                            sspopt4, 
+                                            sspopt5],
+                                    surface_opt=[min(ati_depths),
+                                                float(surface_compressional_speed),
+                                                float(surface_shear_speed),
+                                                float(surface_density),
+                                                float(surface_attenuation)],
+                                    bottom_type=[bottom_type,
+                                                include_bathymetry],
+                                    roughness=roughness,
+                                    bottom_opt=[max(bath_depths),
+                                                float(bottom_compressional_speed),
+                                                float(bottom_shear_speed),
+                                                float(bottom_density),
+                                                float(bottom_attenuation)],
+                                    nsd=num_source_depths,
+                                    sd=source_depths,
+                                    nrd=num_receiver_depths,
+                                    rd=receiver_depths,
+                                    nrr=num_receiver_ranges, 
+                                    rr=receiver_ranges,
+                                    ray_compute=ray_compute_type,
+                                    num_beams=num_beams,
+                                    launch_angles=launch_angles,
+                                    step_size=step_size,
+                                    max_depth=max(bath_depths)+1,
+                                    max_range=max(bath_ranges)+1,
+                                    opt4=None,
+                                    pair='L')
+                
+                # Write the .env, ,ssp, .bty, .ati, .mat files
+                ray_shot.write_files()
+                
+                # Run Bellhop
+                os.system(run_bh)
+
+                # Plot the results
+                ray_shot_plot = Read_RAY(directory=data_dir_curr, 
+                                        ray_file=filename, 
+                                        ray_compute_type=ray_compute_type[0],
+                                        ssp_depths=ssp_depths, 
+                                        ssp=ssp,
+                                        ssp_ranges=ssp_ranges,
+                                        bath_ranges=bath_ranges, 
+                                        bath_depths=bath_depths, 
+                                        ati_depths=ati_depths, 
+                                        s_depth=source_depths, 
+                                        r_depth=receiver_depths, 
+                                        r_range=receiver_ranges,
+                                        precision=1,
+                                        bottom_opt=[max(bath_depths),
+                                                    float(bottom_compressional_speed),
+                                                    float(bottom_shear_speed),
+                                                    float(bottom_density),
+                                                    float(bottom_attenuation)],
+                                        surface_opt=[min(ati_depths),
+                                                    float(surface_compressional_speed),
+                                                    float(surface_shear_speed),
+                                                    float(surface_density),
+                                                    float(surface_attenuation)])
+                    
+                ray_shot_plot.write_mat()
+                ray_shot_plot.plot_ray_profile()
+
+            elif ray_compute_type[0] == 'C' or ray_compute_type[0] == 'I' or ray_compute_type[0] == 'S':
+                tl_shot = Write_TL(dir=data_dir_curr, 
                                 filename=filename, 
                                 ssp_depths=ssp_depths,
                                 ssp=ssp,
@@ -165,18 +347,18 @@ def run_bellhop(self):
                                 ati_depths=ati_depths,
                                 freq=freq,
                                 nmedia=1,
-                                sspopt=[sspopt1, 
+                                sspopt=[sspopt1_curr, 
                                         sspopt2, 
                                         sspopt3, 
                                         sspopt4, 
                                         sspopt5],
                                 surface_opt=[min(ati_depths),
-                                            float(surface_compressional_speed),
-                                            float(surface_shear_speed),
-                                            float(surface_density),
-                                            float(surface_attenuation)],
+                                                float(surface_compressional_speed),
+                                                float(surface_shear_speed),
+                                                float(surface_density),
+                                                float(surface_attenuation)],
                                 bottom_type=[bottom_type,
-                                            include_bathymetry],
+                                                include_bathymetry],
                                 roughness=roughness,
                                 bottom_opt=[max(bath_depths),
                                             float(bottom_compressional_speed),
@@ -197,183 +379,308 @@ def run_bellhop(self):
                                 max_range=max(bath_ranges)+1,
                                 opt4=None,
                                 pair='L')
-            
-            # Write the .env, ,ssp, .bty, .ati, .mat files
-            ray_shot.write_files()
-            
-            # Run Bellhop
-            os.system(run_bh)
+                
+                # Write the .env, ,ssp, .bty, .ati, .mat files
+                tl_shot.write_files()
+                
+                # Run Bellhop
+                os.system(run_bh)
 
-            # Plot the results
-            ray_shot_plot = Read_RAY(directory=data_dir, 
-                                    ray_file=filename, 
-                                    ray_compute_type=ray_compute_type[0],
-                                    ssp_depths=ssp_depths, 
+                # Plot the results
+                tl_shot_plot = Read_TL(directory=data_dir_curr, 
+                                    tl_file=filename, 
+                                    freqs=[int(float(freq))],
+                                    bath_depths=bath_depths,
+                                    bath_ranges=bath_ranges,
+                                    ati_depths=ati_depths,
+                                    ati_ranges=bath_ranges)
+                    
+                tl_shot_plot.read_shd_main()
+                tl_shot_plot.write_mat()
+                tl_shot_plot.plot_tl()
+
+        else:
+            env_folders = [f for f in os.listdir(environmental_dir) if os.path.isdir(os.path.join(environmental_dir, f))]
+            for i in range(len(env_folders)):
+
+                env_curr = env_folders[i]
+                environmental_file_curr = os.path.join(environmental_dir, env_curr)
+                bathy_file = os.path.join(environmental_file_curr, "bty.mat")
+                ssp_file = os.path.join(environmental_file_curr, "ssp.mat")
+                ati_file = os.path.join(environmental_file_curr, "ati.mat")
+
+                # Adjust save directory for current run
+                data_dir_curr = os.path.join(data_dir, env_curr)
+                if not os.path.exists(data_dir_curr):
+                    os.makedirs(data_dir_curr)
+                else:
+                    QMessageBox.warning(self, "Warning", f"Directory {data_dir_curr} already exists. Files may be overwritten.")   
+            
+                # BTY
+                bty_data = io.loadmat(bathy_file)
+                bath_map = np.array(bty_data["bath_map"], dtype=np.float64)
+                lon_range = np.squeeze(np.array(bty_data["lon_range"], dtype=np.float64), axis=0)
+                lat_range = np.squeeze(np.array(bty_data["lat_range"], dtype=np.float64), axis=0)
+
+                if  lon_start >= min(lon_range) and lon_start <= max(lon_range) and lat_start >= min(lat_range) and lat_start <= max(lat_range) and lon_end >= min(lon_range) and lon_end <= max(lon_range) and lat_end >= min(lat_range) and lat_end <= max(lat_range):
+                    bath_depths, bath_ranges = map_1D(bath_map=bath_map, 
+                                                    lon_range=lon_range, 
+                                                    lat_range=lat_range, 
+                                                    lon_start=lon_start, 
+                                                    lon_end=lon_end, 
+                                                    lat_start=lat_start, 
+                                                    lat_end=lat_end,
+                                                    num_points=500)
+                else:
+                    QMessageBox.critical(self, "Error", "Source and receiver coordinates are outside the bathymetry range. Please check your inputs.")
+                    return
+
+                # ATI
+                ati_data = io.loadmat(ati_file)
+                ati_depths = np.squeeze(np.array(ati_data["ati"], dtype=np.float64), axis=0)
+
+                # SSP
+                ssp_data = io.loadmat(ssp_file)
+                ssp = np.array(ssp_data["ssp"], dtype=np.float64)
+                ssp_depths = np.array(ssp_data["ssp_depths"], dtype=np.float64)
+                ssp_ranges = np.array(ssp_data["ssp_ranges"], dtype=np.float64)
+                if ssp_ranges.shape[1] > 1:
+                    sspopt1_curr = 'Q'
+                else:
+                    sspopt1_curr = sspopt1
+
+                # Bellhop terminal command
+                if os.name == 'posix':
+                    run_bh = f"{bellhop_executable} -2D {os.path.join(data_dir_curr, filename)}"
+                elif os.name == 'nt':
+                    run_bh = f"{bellhop_executable}.exe -2D {os.path.join(data_dir_curr, filename)}"
+                else:
+                    raise EnvironmentError("Unsupported operating system for Bellhop execution.")
+
+
+                if ray_compute_type[0] == 'E':
+                    ray_shot = Write_RAY(dir=data_dir_curr, 
+                                        filename=filename, 
+                                        ssp_depths=ssp_depths,
+                                        ssp=ssp,
+                                        ssp_ranges=ssp_ranges,
+                                        bath_ranges=bath_ranges,
+                                        bath_depths=bath_depths,
+                                        ati_depths=ati_depths,
+                                        freq=freq,
+                                        nmedia=1,
+                                        sspopt=[sspopt1_curr, 
+                                                sspopt2, 
+                                                sspopt3, 
+                                                sspopt4, 
+                                                sspopt5],
+                                        surface_opt=[min(ati_depths),
+                                                    float(surface_compressional_speed),
+                                                    float(surface_shear_speed),
+                                                    float(surface_density),
+                                                    float(surface_attenuation)],
+                                        bottom_type=[bottom_type,
+                                                    include_bathymetry],
+                                        roughness=roughness,
+                                        bottom_opt=[max(bath_depths),
+                                                    float(bottom_compressional_speed),
+                                                    float(bottom_shear_speed),
+                                                    float(bottom_density),
+                                                    float(bottom_attenuation)],
+                                        nsd=num_source_depths,
+                                        sd=source_depths,
+                                        nrd=num_receiver_depths,
+                                        rd=receiver_depths,
+                                        nrr=num_receiver_ranges, 
+                                        rr=receiver_ranges,
+                                        ray_compute=ray_compute_type,
+                                        num_beams=num_beams,
+                                        launch_angles=launch_angles,
+                                        step_size=step_size,
+                                        max_depth=max(bath_depths)+1,
+                                        max_range=max(bath_ranges)+1,
+                                        opt4=None,
+                                        pair='L')
+                    
+                    # Write the .env, ,ssp, .bty, .ati, .mat files
+                    ray_shot.write_files()
+                    
+                    # Run Bellhop
+                    os.system(run_bh)
+
+                    # Plot the results
+                    ray_shot_plot = Read_RAY(directory=data_dir_curr, 
+                                            ray_file=filename, 
+                                            ray_compute_type=ray_compute_type[0],
+                                            ssp_depths=ssp_depths, 
+                                            ssp=ssp,
+                                            ssp_ranges=ssp_ranges,
+                                            bath_ranges=bath_ranges, 
+                                            bath_depths=bath_depths, 
+                                            ati_depths=ati_depths, 
+                                            s_depth=source_depths, 
+                                            r_depth=receiver_depths, 
+                                            r_range=receiver_ranges,
+                                            precision=1,
+                                            bottom_opt=[max(bath_depths),
+                                                        float(bottom_compressional_speed),
+                                                        float(bottom_shear_speed),
+                                                        float(bottom_density),
+                                                        float(bottom_attenuation)],
+                                            surface_opt=[min(ati_depths),
+                                                        float(surface_compressional_speed),
+                                                        float(surface_shear_speed),
+                                                        float(surface_density),
+                                                        float(surface_attenuation)])
+                        
+                    ray_shot_plot.write_mat()
+                    ray_shot_plot.plot_ray_profile()
+                
+                elif ray_compute_type[0] == 'R':
+                    ray_shot = Write_RAY(dir=data_dir_curr, 
+                                        filename=filename, 
+                                        ssp_depths=ssp_depths,
+                                        ssp=ssp,
+                                        ssp_ranges=ssp_ranges,
+                                        bath_ranges=bath_ranges,
+                                        bath_depths=bath_depths,
+                                        ati_depths=ati_depths,
+                                        freq=freq,
+                                        nmedia=1,
+                                        sspopt=[sspopt1_curr, 
+                                                sspopt2, 
+                                                sspopt3, 
+                                                sspopt4, 
+                                                sspopt5],
+                                        surface_opt=[min(ati_depths),
+                                                    float(surface_compressional_speed),
+                                                    float(surface_shear_speed),
+                                                    float(surface_density),
+                                                    float(surface_attenuation)],
+                                        bottom_type=[bottom_type,
+                                                    include_bathymetry],
+                                        roughness=roughness,
+                                        bottom_opt=[max(bath_depths),
+                                                    float(bottom_compressional_speed),
+                                                    float(bottom_shear_speed),
+                                                    float(bottom_density),
+                                                    float(bottom_attenuation)],
+                                        nsd=num_source_depths,
+                                        sd=source_depths,
+                                        nrd=num_receiver_depths,
+                                        rd=receiver_depths,
+                                        nrr=num_receiver_ranges, 
+                                        rr=receiver_ranges,
+                                        ray_compute=ray_compute_type,
+                                        num_beams=num_beams,
+                                        launch_angles=launch_angles,
+                                        step_size=step_size,
+                                        max_depth=max(bath_depths)+1,
+                                        max_range=max(bath_ranges),
+                                        opt4=None,
+                                        pair='L')
+                    
+                    # Write the .env, ,ssp, .bty, .ati, .mat files
+                    ray_shot.write_files()
+                    
+                    # Run Bellhop
+                    os.system(run_bh)
+
+                    # Plot the results
+                    ray_shot_plot = Read_RAY(directory=data_dir_curr, 
+                                            ray_file=filename, 
+                                            ray_compute_type=ray_compute_type[0],
+                                            ssp_depths=ssp_depths, 
+                                            ssp=ssp,
+                                            ssp_ranges=ssp_ranges,
+                                            bath_ranges=bath_ranges, 
+                                            bath_depths=bath_depths, 
+                                            ati_depths=ati_depths, 
+                                            s_depth=source_depths, 
+                                            r_depth=receiver_depths, 
+                                            r_range=receiver_ranges,
+                                            precision=1,
+                                            bottom_opt=[max(bath_depths),
+                                                        float(bottom_compressional_speed),
+                                                        float(bottom_shear_speed),
+                                                        float(bottom_density),
+                                                        float(bottom_attenuation)],
+                                            surface_opt=[min(ati_depths),
+                                                        float(surface_compressional_speed),
+                                                        float(surface_shear_speed),
+                                                        float(surface_density),
+                                                        float(surface_attenuation)])
+                        
+                    ray_shot_plot.write_mat()
+                    ray_shot_plot.plot_ray_profile()
+
+                elif ray_compute_type[0] == 'C' or ray_compute_type[0] == 'I' or ray_compute_type[0] == 'S':
+                    tl_shot = Write_TL(dir=data_dir_curr, 
+                                    filename=filename, 
+                                    ssp_depths=ssp_depths,
                                     ssp=ssp,
                                     ssp_ranges=ssp_ranges,
-                                    bath_ranges=bath_ranges, 
-                                    bath_depths=bath_depths, 
-                                    ati_depths=ati_depths, 
-                                    s_depth=source_depths, 
-                                    r_depth=receiver_depths, 
-                                    r_range=receiver_ranges,
-                                    precision=1,
+                                    bath_ranges=bath_ranges,
+                                    bath_depths=bath_depths,
+                                    ati_depths=ati_depths,
+                                    freq=freq,
+                                    nmedia=1,
+                                    sspopt=[sspopt1_curr, 
+                                            sspopt2, 
+                                            sspopt3, 
+                                            sspopt4, 
+                                            sspopt5],
+                                    surface_opt=[min(ati_depths),
+                                                    float(surface_compressional_speed),
+                                                    float(surface_shear_speed),
+                                                    float(surface_density),
+                                                    float(surface_attenuation)],
+                                    bottom_type=[bottom_type,
+                                                    include_bathymetry],
+                                    roughness=roughness,
                                     bottom_opt=[max(bath_depths),
                                                 float(bottom_compressional_speed),
                                                 float(bottom_shear_speed),
                                                 float(bottom_density),
                                                 float(bottom_attenuation)],
-                                    surface_opt=[min(ati_depths),
-                                                float(surface_compressional_speed),
-                                                float(surface_shear_speed),
-                                                float(surface_density),
-                                                float(surface_attenuation)])
-                
-            ray_shot_plot.write_mat()
-            ray_shot_plot.plot_ray_profile()
-            plt.show()
-        
-        elif ray_compute_type[0] == 'R':
-            ray_shot = Write_RAY(dir=data_dir, 
-                                filename=filename, 
-                                ssp_depths=ssp_depths,
-                                ssp=ssp,
-                                ssp_ranges=ssp_ranges,
-                                bath_ranges=bath_ranges,
-                                bath_depths=bath_depths,
-                                ati_depths=ati_depths,
-                                freq=freq,
-                                nmedia=1,
-                                sspopt=[sspopt1, 
-                                        sspopt2, 
-                                        sspopt3, 
-                                        sspopt4, 
-                                        sspopt5],
-                                surface_opt=[min(ati_depths),
-                                            float(surface_compressional_speed),
-                                            float(surface_shear_speed),
-                                            float(surface_density),
-                                            float(surface_attenuation)],
-                                bottom_type=[bottom_type,
-                                            include_bathymetry],
-                                roughness=roughness,
-                                bottom_opt=[max(bath_depths),
-                                            float(bottom_compressional_speed),
-                                            float(bottom_shear_speed),
-                                            float(bottom_density),
-                                            float(bottom_attenuation)],
-                                nsd=num_source_depths,
-                                sd=source_depths,
-                                nrd=num_receiver_depths,
-                                rd=receiver_depths,
-                                nrr=num_receiver_ranges, 
-                                rr=receiver_ranges,
-                                ray_compute=ray_compute_type,
-                                num_beams=num_beams,
-                                launch_angles=launch_angles,
-                                step_size=step_size,
-                                max_depth=max(bath_depths)+1,
-                                max_range=max(bath_ranges),
-                                opt4=None,
-                                pair='L')
-            
-            # Write the .env, ,ssp, .bty, .ati, .mat files
-            ray_shot.write_files()
-            
-            # Run Bellhop
-            os.system(run_bh)
+                                    nsd=num_source_depths,
+                                    sd=source_depths,
+                                    nrd=num_receiver_depths,
+                                    rd=receiver_depths,
+                                    nrr=num_receiver_ranges, 
+                                    rr=receiver_ranges,
+                                    ray_compute=ray_compute_type,
+                                    num_beams=num_beams,
+                                    launch_angles=launch_angles,
+                                    step_size=step_size,
+                                    max_depth=max(bath_depths)+1,
+                                    max_range=max(bath_ranges)+1,
+                                    opt4=None,
+                                    pair='L')
+                    
+                    # Write the .env, ,ssp, .bty, .ati, .mat files
+                    tl_shot.write_files()
+                    
+                    # Run Bellhop
+                    os.system(run_bh)
 
-            # Plot the results
-            ray_shot_plot = Read_RAY(directory=data_dir, 
-                                    ray_file=filename, 
-                                    ray_compute_type=ray_compute_type[0],
-                                    ssp_depths=ssp_depths, 
-                                    ssp=ssp,
-                                    ssp_ranges=ssp_ranges,
-                                    bath_ranges=bath_ranges, 
-                                    bath_depths=bath_depths, 
-                                    ati_depths=ati_depths, 
-                                    s_depth=source_depths, 
-                                    r_depth=receiver_depths, 
-                                    r_range=receiver_ranges,
-                                    precision=1,
-                                    bottom_opt=[max(bath_depths),
-                                                float(bottom_compressional_speed),
-                                                float(bottom_shear_speed),
-                                                float(bottom_density),
-                                                float(bottom_attenuation)],
-                                    surface_opt=[min(ati_depths),
-                                                float(surface_compressional_speed),
-                                                float(surface_shear_speed),
-                                                float(surface_density),
-                                                float(surface_attenuation)])
-                
-            ray_shot_plot.plot_ray_profile()
-            plt.show()
+                    # Plot the results
+                    tl_shot_plot = Read_TL(directory=data_dir_curr, 
+                                        tl_file=filename, 
+                                        freqs=[int(float(freq))],
+                                        bath_depths=bath_depths,
+                                        bath_ranges=bath_ranges,
+                                        ati_depths=ati_depths,
+                                        ati_ranges=bath_ranges)
+                        
+                    tl_shot_plot.read_shd_main()
+                    tl_shot_plot.write_mat()
+                    tl_shot_plot.plot_tl()
 
-        elif ray_compute_type[0] == 'C' or ray_compute_type[0] == 'I' or ray_compute_type[0] == 'S':
-            tl_shot = Write_TL(dir=data_dir, 
-                               filename=filename, 
-                               ssp_depths=ssp_depths,
-                               ssp=ssp,
-                               ssp_ranges=ssp_ranges,
-                               bath_ranges=bath_ranges,
-                               bath_depths=bath_depths,
-                               ati_depths=ati_depths,
-                               freq=freq,
-                               nmedia=1,
-                               sspopt=[sspopt1, 
-                                       sspopt2, 
-                                       sspopt3, 
-                                       sspopt4, 
-                                       sspopt5],
-                               surface_opt=[min(ati_depths),
-                                            float(surface_compressional_speed),
-                                            float(surface_shear_speed),
-                                            float(surface_density),
-                                            float(surface_attenuation)],
-                               bottom_type=[bottom_type,
-                                            include_bathymetry],
-                               roughness=roughness,
-                               bottom_opt=[max(bath_depths),
-                                           float(bottom_compressional_speed),
-                                           float(bottom_shear_speed),
-                                           float(bottom_density),
-                                           float(bottom_attenuation)],
-                               nsd=num_source_depths,
-                               sd=source_depths,
-                               nrd=num_receiver_depths,
-                               rd=receiver_depths,
-                               nrr=num_receiver_ranges, 
-                               rr=receiver_ranges,
-                               ray_compute=ray_compute_type,
-                               num_beams=num_beams,
-                               launch_angles=launch_angles,
-                               step_size=step_size,
-                               max_depth=max(bath_depths)+1,
-                               max_range=max(bath_ranges)+1,
-                               opt4=None,
-                               pair='L')
             
-            # Write the .env, ,ssp, .bty, .ati, .mat files
-            tl_shot.write_files()
-            
-            # Run Bellhop
-            os.system(run_bh)
+    except Exception as e:
+        QMessageBox.critical(self, "Error", f"{e}")
 
-            # Plot the results
-            tl_shot_plot = Read_TL(directory=data_dir, 
-                                   tl_file=filename, 
-                                   freqs=[int(float(freq))],
-                                   bath_depths=bath_depths,
-                                   bath_ranges=bath_ranges,
-                                   ati_depths=ati_depths,
-                                   ati_ranges=bath_ranges)
-                
-            tl_shot_plot.read_shd_main()
-            tl_shot_plot.write_mat()
-            tl_shot_plot.plot_tl()
-            plt.show()
-            
-    # except Exception as e:
-    #     QMessageBox.critical(self, "Error", f"{e}")
+    
+def compare_tl(self):
+    return

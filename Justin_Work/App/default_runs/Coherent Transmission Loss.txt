@@ -1,7 +1,5 @@
 Bellhop Executable ~ Justin_Work/App/bellhop_exe/bellhopcxx
-SSP File ~ Justin_Work/App/bty_ssp_ati/ssp.mat
-Bathymetry File ~ Justin_Work/App/bty_ssp_ati/bty.mat
-Altimetry File ~ Justin_Work/App/bty_ssp_ati/ati.mat
+Environmental Files Directory ~ Justin_Work/App/environmental_files
 Data File Directory ~ Justin_Work/App/Runs
 Filename ~ run_tl_3500
 Source Longitude ~ -122.83

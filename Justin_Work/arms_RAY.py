@@ -23,7 +23,7 @@ bath_ranges = np.squeeze(np.array(track_info["distances"]), axis=0) # Meters
 bath_depths = np.squeeze(np.array(track_info["profile"]), axis=0)
 ati_depths = np.ones_like(bath_ranges) * 10 * np.sin(2*np.pi*bath_ranges)
 
-io.savemat(os.path.join("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/App/bty_ssp_ati", "ati.mat"), {"ati": ati_depths, "ati_ranges": bath_ranges})
+# io.savemat(os.path.join("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/App/bty_ssp_ati", "ati.mat"), {"ati": ati_depths, "ati_ranges": bath_ranges})
 
 # Sound Speed Profile (.ssp file info)
 ssp_data = io.loadmat(os.path.join(track_dir, "ARMS_firstDay_CTD_info.mat"))
@@ -44,13 +44,16 @@ ssp_ranges = np.arange(0, int(max(bath_ranges))+1)
 for i in range(ssp_track.shape[0]):
     ssp_track[i,:] = ssp
 
-io.savemat(os.path.join("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/App/bty_ssp_ati", "ssp.mat"), {"ssp": ssp, "ssp_depths": ssp_depths, "ssp_ranges": ssp_ranges_1})
-io.savemat(os.path.join("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/App/bty_ssp_ati", "ssp_track.mat"), {"ssp": ssp_track, "ssp_depths": ssp_depths, "ssp_ranges": ssp_ranges})
+ssp = np.expand_dims(ssp, axis=0)
+ssp_depths = np.expand_dims(ssp_depths, axis=0)
+
+# io.savemat(os.path.join("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/App/bty_ssp_ati", "ssp.mat"), {"ssp": ssp, "ssp_depths": ssp_depths, "ssp_ranges": ssp_ranges_1})
+# io.savemat(os.path.join("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/App/bty_ssp_ati", "ssp_track.mat"), {"ssp": ssp_track, "ssp_depths": ssp_depths, "ssp_ranges": ssp_ranges})
 
 # Environmental Information (.env file info)
 freq = 100.0   # Hz
 nmedia = 1   # Number of media layers (water column SSP)
-sspopt = ["S",  # S: Cubic Spline Interpolation, C: C-linear interpolation, N: N2-line Interpolation, A: Analytic Interpolation, Q: Quadratic Approximation
+sspopt = ["Q",  # S: Cubic Spline Interpolation, C: C-linear interpolation, N: N2-line Interpolation, A: Analytic Interpolation, Q: Quadratic Approximation
           "A",  # V: Vacuum above surface (SURFACE-LINE not required), R: Perfectly rigid media above surface, A: Acoustic half-space, F: Read a list of reflection coefficients from *.irc file
           "F",  # F: attenuation corresponds to (dB/m)kHz, L: attenuation corresponds to parameter loss, M: attenuation corresponds to dB/m, N: attenuation corresponds to Nepers/m, Q: attenuation corresponds to a Q-factor, W: attenuation corresponds to dB/wavelength
           " ",  # T: Opptional parameter for Thorpe volume attenuation
@@ -94,7 +97,8 @@ precision = 15
 shot_1_ray = Write_RAY(dir=directory, 
                        filename=arms_save_file, 
                        ssp_depths=ssp_depths,
-                       ssp=ssp,
+                       ssp=ssp_track,
+                       ssp_ranges=ssp_ranges,
                        bath_ranges=bath_ranges,
                        bath_depths=bath_depths,
                        ati_depths=ati_depths,
@@ -126,11 +130,11 @@ shot_1_ray.write_files()
 os.system("/Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/bellhopcuda/bin/bellhopcxx -2D /Users/justindiamond/Documents/Documents/UW-APL/Research/ARMS/Justin_Work/Data/arms_ray/arms_1_ray")
 
 shot_1_ray_plot = Read_RAY(directory=directory, 
-                           output_directory = output_directory,
                            ray_file=arms_save_file, 
                            ray_compute_type=ray_compute[0],
                            ssp_depths=ssp_depths, 
-                           ssp=ssp,
+                           ssp=ssp_track,
+                           ssp_ranges=ssp_ranges,
                            bath_ranges=bath_ranges, 
                            bath_depths=bath_depths, 
                            ati_depths=ati_depths, 

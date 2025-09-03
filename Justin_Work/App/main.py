@@ -13,9 +13,8 @@ root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 
 sys.path.append(root_dir)
 
 # Personal Files
-from Justin_Work.App.caas import run_caas
 from Justin_Work.App.default_cases import get_default_options, set_default_options
-from Justin_Work.App.run_types import plot_bathy, run_bellhop
+from Justin_Work.App.run_types import plot_bathy, plot_ssp, run_bellhop, compare_tl
 
 # UI Class
 class TLViewerApp(QWidget):
@@ -27,11 +26,12 @@ class TLViewerApp(QWidget):
         self.setup_ui()
 
     # Import member functions
-    run_caas = run_caas
     get_default_options = get_default_options
     set_default_options = set_default_options
     plot_bathy = plot_bathy
+    plot_ssp = plot_ssp
     run_bellhop = run_bellhop
+    compare_tl = compare_tl
 
 
     def setup_ui(self):
@@ -40,9 +40,7 @@ class TLViewerApp(QWidget):
         # Field labels and entries
         self.fields = {
             "Bellhop Executable": QLineEdit(),
-            "SSP File": QLineEdit(),
-            "Bathymetry File": QLineEdit(),
-            "Altimetry File": QLineEdit(),
+            "Environmental Files Directory": QLineEdit(),
             "Filename": QLineEdit(),
             "Data File Directory": QLineEdit(),
             "Source Longitude": QLineEdit(),
@@ -95,33 +93,15 @@ class TLViewerApp(QWidget):
                 bellhop_layout.addWidget(line_edit, 0, 1)
                 bellhop_layout.addWidget(browse_button, 0, 2)
                 self.layout.addLayout(bellhop_layout, j, 2 * line, 1, 2) 
-            elif label_text == "SSP File":
-                ssp_browse = QPushButton("Browse")
-                ssp_browse.clicked.connect(self.browse_ssp_mat)
-                ssp_layout = QGridLayout()
+            elif label_text == "Environmental Files Directory":
+                env_browse = QPushButton("Browse")
+                env_browse.clicked.connect(self.browse_env_dir)
+                env_layout = QGridLayout()
                 label = QLabel(label_text)
-                ssp_layout.addWidget(label, 0, 0)
-                ssp_layout.addWidget(line_edit, 0, 1)
-                ssp_layout.addWidget(ssp_browse, 0, 2)
-                self.layout.addLayout(ssp_layout, j, 2 * line, 1, 2)
-            elif label_text == "Bathymetry File":
-                bty_browse = QPushButton("Browse")
-                bty_browse.clicked.connect(self.browse_bty_mat)
-                bty_layout = QGridLayout()
-                label = QLabel(label_text)
-                bty_layout.addWidget(label, 0, 0)
-                bty_layout.addWidget(line_edit, 0, 1)
-                bty_layout.addWidget(bty_browse, 0, 2)
-                self.layout.addLayout(bty_layout, j, 2 * line, 1, 2)
-            elif label_text == "Altimetry File":
-                alt_browse = QPushButton("Browse")
-                alt_browse.clicked.connect(self.browse_alt_mat)
-                alt_layout = QGridLayout()
-                label = QLabel(label_text)
-                alt_layout.addWidget(label, 0, 0)
-                alt_layout.addWidget(line_edit, 0, 1)
-                alt_layout.addWidget(alt_browse, 0, 2)
-                self.layout.addLayout(alt_layout, j, 2 * line, 1, 2)
+                env_layout.addWidget(label, 0, 0)
+                env_layout.addWidget(line_edit, 0, 1)
+                env_layout.addWidget(env_browse, 0, 2)
+                self.layout.addLayout(env_layout, j, 2 * line, 1, 2)
             elif label_text == "Filename":
                 filename_layout = QGridLayout()
                 label = QLabel(label_text)
@@ -406,7 +386,9 @@ class TLViewerApp(QWidget):
         self.run_type_dropdown = QComboBox()
         self.run_type_dropdown.addItems([
             "Run Bellhop",
-            "Plot Bathymetry"
+            "Plot Bathymetry",
+            "Plot SSP",
+            "Compare TL"
         ])
         run_button = QPushButton("Run")
         run_layout.addWidget(run_label, 0, 0)
@@ -421,7 +403,11 @@ class TLViewerApp(QWidget):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Bellhop Executable")
         if file_path:
             self.fields["Bellhop Executable"].setText(file_path)
-    
+
+    def browse_env_dir(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select Environmental Files Directory")
+        if file_path:
+            self.fields["Environmental Files Directory"].setText(file_path)
 
     def browse_ssp_mat(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select SSP .mat File")
@@ -453,6 +439,10 @@ class TLViewerApp(QWidget):
             self.run_bellhop()
         elif run_option == "Plot Bathymetry":
             self.plot_bathy()
+        elif run_option == "Plot SSP":
+            self.plot_ssp()
+        elif run_option == "Compare TL":
+            self.compare_tl()
     
 
 if __name__ == "__main__":

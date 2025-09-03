@@ -133,18 +133,18 @@ class Write_RAY:
             if self.ssp.shape[0] == 1:
                 f.write(f"'{self.pair}'\n")
                 for d, s in zip(self.ssp_depth[0,:], self.ssp[0,:]):
-                    f.write(f"{d:.1f}  {s:.2f}  /\n")
+                    f.write(f"{d:.1f}  {s:.2f}  \n")
             else:
                 f.write(f"{self.ssp.shape[1]}\n")
                 for i in range(self.ssp_depth.shape[1]):
                     if i == self.ssp_depth.shape[1]-1:
-                        f.write(f"{self.ssp_depth[0,i]:0.1f}    \n")
+                        f.write(f"{self.ssp_depth[0,i]:0.1f}\n")
                     else:
-                        f.write(f"{self.ssp_depth[0,i]:0.1f}    ")
+                        f.write(f"{self.ssp_depth[0,i]:0.1f} ")
                 for i in range(self.ssp.shape[0]):
                     for j in range(self.ssp.shape[1]):
                         if j == self.ssp.shape[1]-1:
-                            f.write(f"{self.ssp[i,j]:0.2f} /\n")
+                            f.write(f"{self.ssp[i,j]:0.2f}\n")
                         else:
                             f.write(f"{self.ssp[i,j]:0.2f} ")
                 return
@@ -258,7 +258,7 @@ class Read_RAY:
     def write_mat(self):
         mat_path = os.path.join(self.directory, self.ray_file + "_output.mat")
 
-        if self.ray_data.size == 0 or self.alpha_data.size == 0:
+        if len(self.ray_data) == 0 or len(self.alpha_data) == 0:
             rays, alphas = self.read_ray_file(self.ray_file_path)
             self.ray_data = rays
             self.alpha_data = alphas 
@@ -315,7 +315,7 @@ class Read_RAY:
 
 
     def plot_ray_profile(self):
-        if self.ray_data.size == 0 or self.alpha_data.size == 0:
+        if len(self.ray_data) == 0 or len(self.alpha_data) == 0:
             rays, alphas = self.read_ray_file(self.ray_file_path)
             self.ray_data = rays
             self.alpha_data = alphas    

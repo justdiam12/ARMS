@@ -14,15 +14,9 @@ def get_default_options(self):
             if key == "Bellhop Executable":
                 value = os.path.normpath(value)
                 self.fields["Bellhop Executable"].setText(os.path.join(os.getcwd(), value))
-            elif key == "SSP File":
+            elif key == "Environmental Files Directory":
                 value = os.path.normpath(value)
-                self.fields["SSP File"].setText(os.path.join(os.getcwd(), value))
-            elif key == "Bathymetry File":
-                value = os.path.normpath(value)
-                self.fields["Bathymetry File"].setText(os.path.join(os.getcwd(), value))
-            elif key == "Altimetry File":   
-                value = os.path.normpath(value)
-                self.fields["Altimetry File"].setText(os.path.join(os.getcwd(), value))
+                self.fields["Environmental Files Directory"].setText(os.path.join(os.getcwd(), value))
             elif key == "Data File Directory":
                 value = os.path.normpath(value)
                 self.fields["Data File Directory"].setText(os.path.join(os.getcwd(), value))
