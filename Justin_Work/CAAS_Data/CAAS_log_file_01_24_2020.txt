@@ -1,0 +1,80 @@
+[BEGIN_PROLOGUE]
+20200124, 05:39:57
+[Number of Array Channels]
+16
+System:CAAS Bottom Mounted
+Event:ARMS
+Program:Disabled
+Run Plan #:OP-ORD 20-01
+Classification:Unclassified
+Operators:Thomas
+Date:2020-01-24 05:34:49
+Instructions:
+Comments:
+Planned Location:Dabob
+Planned Latitude:47.592143
+Planned Longitude:-122.878749
+Planned Depth:0.000000
+TPC Latitude:47.725000
+TPC Longitude:-122.841700
+
+[Operation]
+Sample Rate:651 kHz
+
+[Environment]
+Sea State:0 (Calm)
+
+[Arrays]
+Channel A:3
+Sample Factor:Full (651.0)
+Gain Control:Fixed
+Gain:12.000000
+24-01-2020 05:39:59, Actual Array Depth(feet), -257.88785
+
+Channel A:5
+Sample Factor:Full (651.0)
+Gain Control:Fixed
+Gain:12.000000
+24-01-2020 05:39:59, Actual Array Depth(feet), -237.88785
+
+
+Channel A:7
+Sample Factor:Full (651.0)
+Gain Control:Fixed
+Gain:12.000000
+24-01-2020 05:39:59, Actual Array Depth(feet), -217.88785
+
+Channel A:11
+Sample Factor:Full (651.0)
+Gain Control:Fixed
+Gain:12.000000
+24-01-2020 05:39:59, Actual Array Depth(feet), -162.88785
+
+Channel A:2
+Sample Factor:Full (651.0)
+Gain Control:Fixed
+Gain:12.000000
+24-01-2020 05:39:59, Actual Array Depth(feet), -232.88785
+
+Channel A:4
+Sample Factor:Full (651.0)
+Gain Control:Fixed
+Gain:12.000000
+24-01-2020 05:39:59, Actual Array Depth(feet), -212.88785
+
+Channel A:6
+Sample Factor:Full (651.0)
+Gain Control:Fixed
+Gain:12.000000
+24-01-2020 05:39:59, Actual Array Depth(feet), -192.88785
+
+Channel A:10
+Sample Factor:Full (651.0)
+Gain Control:Fixed
+Gain:12.000000
+24-01-2020 05:39:59, Actual Array Depth(feet), -137.88785
+
+Recording Type:Radiated
+[BEGIN_LOG]
+24-01-2020 05:39:59, Actual Array Depth, -275.8878504672897
+[END_LOG]

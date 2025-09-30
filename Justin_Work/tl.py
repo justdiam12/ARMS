@@ -254,77 +254,7 @@ class Read_TL:
         _, _, _, _, _, pressure = self.read_shd(filename, self.freqs[0])
         self.pressure = np.squeeze(np.squeeze(pressure, axis=0), axis=0)
     
-
-    # def plot_frame(self, ax, pressure, freq):
-    #     ax.clear()
-    #     pressure = abs(pressure)
-    #     pressure = 10 * np.log10(pressure / np.max(pressure))
-    #     levs = np.linspace(-30, 0, 31)
-
-    #     im = ax.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
-    #     ax.invert_yaxis()
-
-    #     ax.set_title(f"{self.tl_file}, Frequency: {freq/1000:.1f} kHz")
-    #     ax.set_xlabel("Range (km)")
-    #     ax.set_ylabel("Depth (m)")
-
-    #     # Tick labeling
-    #     n_range_pts = pressure.shape[-1]
-    #     interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
-    #     tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
-    #     tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
-    #     ax.set_xticks(tick_locs)
-    #     ax.set_xticklabels(tick_labels)
-
-    #     return im
-
-
-    # def tl_animate(self):
-    #     fig, ax = plt.subplots(figsize=(12, 8))
-    #     cbar_ax = fig.add_axes([0.91, 0.15, 0.02, 0.7])  # position of colorbar
-    #     contour = [None]  # to store the contour handle for colorbar
-
-    #     def update(frame_idx):
-    #         ax.clear()
-    #         freq = self.freqs[frame_idx]
-    #         pressure = self.read_shd(freq)
-
-    #         pressure = abs(pressure)
-    #         pressure = 10 * np.log10(pressure / np.max(pressure))
-    #         levs = np.linspace(-30, 0, 31)
-
-    #         cs = ax.contourf(np.squeeze(pressure), levels=levs, cmap='viridis')
-    #         ax.invert_yaxis()
-    #         ax.set_title(f"{self.tl_file}, Frequency: {freq/1000:.1f} kHz")
-    #         ax.set_xlabel("Range (km)")
-    #         ax.set_ylabel("Depth (m)")
-
-    #         # Set x-ticks
-    #         n_range_pts = pressure.shape[-1]
-    #         interpolated_ranges = np.linspace(self.bath_ranges[0], self.bath_ranges[-1], n_range_pts)
-    #         tick_locs = np.linspace(0, n_range_pts - 1, 6, dtype=int)
-    #         tick_labels = [f"{interpolated_ranges[i]:.1f}" for i in tick_locs]
-    #         ax.set_xticks(tick_locs)
-    #         ax.set_xticklabels(tick_labels)
-
-    #         # Update colorbar
-    #         cbar_ax.clear()
-    #         fig.colorbar(cs, cax=cbar_ax, label="Relative TL (dB)")
-
-    #         return cs.collections
-
-    #     anim = animation.FuncAnimation(
-    #         fig, update,
-    #         frames=len(self.freqs),
-    #         blit=False,
-    #         repeat=False
-    #     )
-
-    #     output_path = f"{self.directory}{self.tl_file}_sweep.mp4"
-    #     anim.save(output_path, writer='ffmpeg', fps=5)
-    #     print(f"Saved animation to {output_path}")
-
-
+    
     def plot_tl(self):
         if self.pressure.size == 0:
             self.read_shd_main()
